@@ -44,7 +44,11 @@ def analyze_design(design_directory, clobber=False):
     print("\treading PDB file ...")
     pdb_file, cando_file, vis_file = daedalus.get_files(design_directory)
     # process with DSSR
-    dssr_info = dssr.analyze_pdb(pdb_file)
+    try:
+        dssr_info = dssr.analyze_pdb(pdb_file)
+    except:
+        print("DSSR analysis failed, skipping ...")
+        dssr_info = None
     structure = pdb.get_structure(pdb_file)
     model = pdb.get_model(structure)
     print("\treading CanDo file ...")
@@ -76,14 +80,15 @@ def analyze_designs(design_directories):
         design_directory_abs = os.path.abspath(design_directory_rel)
         try:
             base_info, dssr_info = analyze_design(design_directory_abs, clobber=True)
-        except ZeroDivisionError:
+        except:
             designs_failed.append(design)
         else:
             designs_succeeded.append(design)
             designs_base_info.append(base_info)
-            for section, info in dssr_info.items():
-                info["design"] = [design for i in range(info.shape[0])]
-                designs_dssr_info[section].append(info)
+            if dssr_info:
+                for section, info in dssr_info.items():
+                    info["design"] = [design for i in range(info.shape[0])]
+                    designs_dssr_info[section].append(info)
     print("Succeeded:", designs_succeeded)
     print("Failed:   ", designs_failed)
     print("plotting DSSR results ...")
