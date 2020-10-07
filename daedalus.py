@@ -11,7 +11,7 @@ from Bio.PDB.Model import Model
 import pandas as pd
 
 import cando
-import pdb
+import pdb_tools
 import seq_utils
 import terms
 import vis
@@ -52,12 +52,22 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
     :return:
     """
     if version is None:
-        version = 2 if "v2" in vis_file else 1
+        # If no version is specified, infer the version from the txt file.
+        succeeded_versions = list()
+        failed_versions = list()
+        for version in [1, 2]:
+            try:
+                base_annotations_vis = vis.annotate_bases(vis_file, version)
+            except AssertionError:
+                failed_versions.append(version)
+            else:
+                succeeded_versions.append(version)
+        assert len(succeeded_versions) == 1
+        version = succeeded_versions[0]
     base_nums = sorted(g_up)
     assert base_nums == sorted(g_dn) == sorted(g_ax)
     # Get the base annotations from CanDo and the ASCII vis file.
     base_annotations_cando = cando.annotate_bases(g_up, g_dn, g_ax)
-    base_annotations_vis = vis.annotate_bases(vis_file, version)
     # Refine the annotation for each base.
     base_annotations = dict()
     for fwd, rev in zip([5, 3], [3, 5]):
@@ -138,8 +148,8 @@ def map_cando_num_to_pdb_chain_num(model: Model, base_annotations, g_dn, g_ax):
     """
     # Get sequences and base numbers from PDB.
     scaffold_chain = model[seq_utils.scaffold_chain_id]
-    scaffold_base_nums_pdb, scaffold_seq_pdb = pdb.get_chain_nums_seq(scaffold_chain, na="RNA")
-    staples_chains_nums_seqs_pdb = pdb.get_chains_nums_seqs(
+    scaffold_base_nums_pdb, scaffold_seq_pdb = pdb_tools.get_chain_nums_seq(scaffold_chain, na="RNA")
+    staples_chains_nums_seqs_pdb = pdb_tools.get_chains_nums_seqs(
         [chain for chain in model if chain.get_id() != seq_utils.scaffold_chain_id], na="DNA")
     staples_seqs_pdb = {seq: (chain, nums) for chain, (nums, seq) in staples_chains_nums_seqs_pdb.items()}
     # Get staple sequences and base numbers from CanDo.
@@ -159,7 +169,7 @@ def map_cando_num_to_pdb_chain_num(model: Model, base_annotations, g_dn, g_ax):
 
 
 BOND_ID_VARS = ["design", "CanDo number", "PDB chain", "PDB number", "location"]
-BOND_TYPE_VARS = [f"{a1}-{a2} bond" for (n1, a1), (n2, a2) in pdb.BACKBONE_BONDS]
+BOND_TYPE_VARS = [f"{a1}-{a2} bond" for (n1, a1), (n2, a2) in pdb_tools.BACKBONE_BONDS]
 BOND_INFO_FIELDS = BOND_ID_VARS + BOND_TYPE_VARS
 
 def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num):
@@ -167,7 +177,7 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
                               base_nums}
     pdb_chain_num_to_cando_num = {pdb_chain_num: base_num for base_num, pdb_chain_num in
                                   cando_num_to_pdb_chain_num.items()}
-    bond_types_and_lengths = pdb.get_bond_types_and_lengths(model)
+    bond_types_and_lengths = pdb_tools.get_bond_types_and_lengths(model)
     bases_info = list()
     for (pdb_chain, pdb_num), base_bond_types_and_lengths in bond_types_and_lengths.items():
         base_num = pdb_chain_num_to_cando_num[pdb_chain, pdb_num]

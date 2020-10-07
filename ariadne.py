@@ -21,7 +21,7 @@ import cando
 import chimerax
 import daedalus
 import dssr
-import pdb
+import pdb_tools
 import plots
 import seq_utils
 
@@ -49,8 +49,8 @@ def analyze_design(design_directory, clobber=False):
     except:
         print("DSSR analysis failed, skipping ...")
         dssr_info = None
-    structure = pdb.get_structure(pdb_file)
-    model = pdb.get_model(structure)
+    structure = pdb_tools.get_structure(pdb_file)
+    model = pdb_tools.get_model(structure)
     print("\treading CanDo file ...")
     base_nums, base_seq, g_up, g_dn, g_ax = cando.get_connectivity(cando_file)
     print("\tannotating bases ...")
