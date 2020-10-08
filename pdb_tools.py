@@ -81,7 +81,7 @@ def get_chains_nums_seqs(chains: List[Chain], na: Optional[str] = None) -> Dict[
 def get_bond_types_and_lengths(model, pdb_chain_num_to_cando_num, pair_directions, base_num_to_annotation, g_ax):
     bond_types_and_lengths = dict()
     bond_types_and_axial_distances = dict()
-    bond_types_and_angular_distances = dict()
+    bond_types_and_planar_distances = dict()
     for chain in model:
         chain_id = chain.get_id()
         prev_base = None
@@ -93,7 +93,7 @@ def get_bond_types_and_lengths(model, pdb_chain_num_to_cando_num, pair_direction
             scaf_num = min(cando_num, paired_num) if paired_num is not None else None
             bond_types_and_lengths[pdb_chain_num] = dict()
             bond_types_and_axial_distances[pdb_chain_num] = dict()
-            bond_types_and_angular_distances[pdb_chain_num] = dict()
+            bond_types_and_planar_distances[pdb_chain_num] = dict()
             for bond_type in BACKBONE_BONDS:
                 (num1_del, atom1_name), (num2_del, atom2_name) = bond_type
                 if prev_base:
@@ -136,13 +136,13 @@ def get_bond_types_and_lengths(model, pdb_chain_num_to_cando_num, pair_direction
                         axial_dist_2 = np.linalg.norm(axial_disp_2)
                         assert np.isclose(axial_dist_1, axial_dist_2)
                         axial_dist = (axial_dist_1 + axial_dist_2) / 2
-                    # compute the angular distance using the Pythagorean theorem
-                    # distance^2 = axial_dist^2 + angular_dist^2
-                    angular_dist = np.sqrt(distance**2 - axial_dist**2)
+                    # compute the planar distance using the Pythagorean theorem
+                    # distance^2 = axial_dist^2 + planar_dist^2
+                    planar_dist = np.sqrt(distance**2 - axial_dist**2)
                     bond_types_and_axial_distances[pdb_chain_num][bond_type] = axial_dist
-                    bond_types_and_angular_distances[pdb_chain_num][bond_type] = angular_dist
+                    bond_types_and_planar_distances[pdb_chain_num][bond_type] = planar_dist
             prev_base = base
-    return bond_types_and_lengths, bond_types_and_axial_distances, bond_types_and_angular_distances
+    return bond_types_and_lengths, bond_types_and_axial_distances, bond_types_and_planar_distances
 
 
 def project_vector(query, target):

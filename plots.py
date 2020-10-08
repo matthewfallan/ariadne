@@ -72,10 +72,10 @@ def bond_length_distribution(bond_lengths):
     plt.title("Axial length of O3'-P bond vs. location of base across origami designs")
     plt.savefig("bond_length_axial_vs_location.png", dpi=200)
     plt.close()
-    # angular length of O3'-P bond vs location of base
+    # planar length of O3'-P bond vs location of base
     fig = plt.figure()
     fig.set_size_inches(14, 8)
-    bond_lengths_inter = bond_lengths.loc[bond_lengths["bond type"] == "O3'-P angular"]
+    bond_lengths_inter = bond_lengths.loc[bond_lengths["bond type"] == "O3'-P planar"]
     order = sorted(set(bond_lengths_inter["location"]))
     ax = sns.stripplot(data=bond_lengths_inter, x="bond length (Å)", y="location", hue="design", order=order,
                        hue_order=design_order, orient="h", size=2, dodge=True)
@@ -83,7 +83,7 @@ def bond_length_distribution(bond_lengths):
     ax.set_yticks(np.array(ax.get_yticks()) + 0.5, minor=True)
     ax.grid(axis="y", which="minor")
     plt.legend(bbox_to_anchor=(1.01, 1.0))
-    plt.title("Angular length of O3'-P bond vs. location of base across origami designs")
-    plt.savefig("bond_length_angular_vs_location.png", dpi=200)
+    plt.title("Planar length of O3'-P bond vs. location of base across origami designs")
+    plt.savefig("bond_length_planar_vs_location.png", dpi=200)
     plt.close()
 
