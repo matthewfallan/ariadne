@@ -82,7 +82,7 @@ def analyze_designs(design_directories):
         design_directory_abs = os.path.abspath(design_directory_rel)
         try:
             base_info, dssr_info = analyze_design(design_directory_abs, clobber=True)
-        except ZeroDivisionError:
+        except:
             designs_failed.append(design)
         else:
             designs_succeeded.append(design)
