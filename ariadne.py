@@ -44,22 +44,24 @@ def analyze_design(design_directory, clobber=False):
     print("\treading PDB file ...")
     pdb_file, cando_file, vis_file = daedalus.get_files(design_directory)
     # process with DSSR
+    dssr_info = None
     try:
-        dssr_info = dssr.analyze_pdb(pdb_file)
+        #dssr_info = dssr.analyze_pdb(pdb_file)
+        pass
     except:
         print("DSSR analysis failed, skipping ...")
-        dssr_info = None
     structure = pdb_tools.get_structure(pdb_file)
     model = pdb_tools.get_model(structure)
     print("\treading CanDo file ...")
     base_nums, base_seq, g_up, g_dn, g_ax = cando.get_connectivity(cando_file)
+    pair_directions = cando.get_pair_directions(cando_file)
     print("\tannotating bases ...")
     base_annotations = daedalus.annotate_bases(g_up, g_dn, g_ax, vis_file)
     cando_num_to_pdb_chain_num = daedalus.map_cando_num_to_pdb_chain_num(
         model, base_annotations, g_dn, g_ax)
     # Compute and plot bond lengths.
     print("\tcomputing bond lengths ...")
-    base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num)
+    base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_ax)
     print("\twriting bond length file ...")
     base_info_file = os.path.join(outputs_directory, "base_info.tsv")
     base_info.to_csv(base_info_file, sep="\t", index=False)
@@ -80,7 +82,7 @@ def analyze_designs(design_directories):
         design_directory_abs = os.path.abspath(design_directory_rel)
         try:
             base_info, dssr_info = analyze_design(design_directory_abs, clobber=True)
-        except:
+        except ZeroDivisionError:
             designs_failed.append(design)
         else:
             designs_succeeded.append(design)
@@ -117,14 +119,13 @@ def analyze_designs(design_directories):
 
 if __name__ == "__main__":
     designs_directories = sys.argv[1:]
-    """
-    designs_directories = [
-        "1_RNAorigami_design/DAEDALUSX_v1_outputs/LibFig_rPB66",
-        "1_RNAorigami_design/DAEDALUSX_v1_outputs/LibFig_rOct66",
-        "1_RNAorigami_design/DAEDALUSX_v2_outputs/rPB66_v2",
-        "1_RNAorigami_design/DAEDALUSX_v2_outputs/rOct66_v2",
-    ]
-    """
+    if designs_directories == ["std"]:
+        designs_directories = [
+            "/Users/mfa/db/LCBB_Matthew_Molly/1_RNAorigami_design/DAEDALUSX_v1_outputs/LibFig_rPB66",
+            "/Users/mfa/db/LCBB_Matthew_Molly/1_RNAorigami_design/DAEDALUSX_v1_outputs/LibFig_rOct66",
+            "/Users/mfa/db/LCBB_Matthew_Molly/1_RNAorigami_design/DAEDALUSX_v2_outputs/rPB66_v2",
+            "/Users/mfa/db/LCBB_Matthew_Molly/1_RNAorigami_design/DAEDALUSX_v2_outputs/rOct66_v2",
+        ]
     analyze_designs(designs_directories)
 
 

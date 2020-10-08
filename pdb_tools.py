@@ -7,12 +7,14 @@ Functions for working with PDBs and their Biopython representations.
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple, Union
 
-import pandas as pd
-
 from Bio.PDB import PDBParser
 from Bio.PDB.Chain import Chain
 from Bio.PDB.Model import Model
 from Bio.PDB.Structure import Structure
+import numpy as np
+import pandas as pd
+
+import terms
 
 
 BACKBONE_BONDS = [
@@ -76,30 +78,82 @@ def get_chains_nums_seqs(chains: List[Chain], na: Optional[str] = None) -> Dict[
     return chains_nums_seqs
 
 
-def get_bond_types_and_lengths(model):
+def get_bond_types_and_lengths(model, pdb_chain_num_to_cando_num, pair_directions, base_num_to_annotation, g_ax):
     bond_types_and_lengths = dict()
+    bond_types_and_axial_distances = dict()
+    bond_types_and_angular_distances = dict()
     for chain in model:
         chain_id = chain.get_id()
         prev_base = None
         for base in chain:
             base_num = base.get_id()[1]
-            bond_types_and_lengths[(chain_id, base_num)] = dict()
+            pdb_chain_num = chain_id, base_num
+            cando_num = pdb_chain_num_to_cando_num[pdb_chain_num]
+            paired_num = g_ax.get(cando_num)
+            scaf_num = min(cando_num, paired_num) if paired_num is not None else None
+            bond_types_and_lengths[pdb_chain_num] = dict()
+            bond_types_and_axial_distances[pdb_chain_num] = dict()
+            bond_types_and_angular_distances[pdb_chain_num] = dict()
             for bond_type in BACKBONE_BONDS:
                 (num1_del, atom1_name), (num2_del, atom2_name) = bond_type
+                if prev_base:
+                    cando_prev = pdb_chain_num_to_cando_num[chain_id, prev_base.get_id()[1]]
+                    paired_prev = g_ax.get(cando_prev)
+                    scaf_prev = min(cando_prev, paired_prev) if paired_prev is not None else None
+                else:
+                    scaf_prev = None
                 if num1_del == 0:
                     atom1 = base[atom1_name]
+                    axis1 = pair_directions.loc[scaf_num] if scaf_num is not None else None
                 elif num1_del == -1:
                     atom1 = prev_base[atom1_name] if prev_base is not None else None
+                    axis1 = pair_directions.loc[scaf_prev] if scaf_prev is not None else None
                 else:
                     raise ValueError(num1_del)
                 if num2_del == 0:
                     atom2 = base[atom2_name]
+                    axis2 = pair_directions.loc[scaf_num] if scaf_num is not None else None
                 elif num2_del == -1:
                     atom2 = prev_base[atom2_name] if prev_base is not None else None
+                    axis2 = pair_directions.loc[scaf_prev] if scaf_prev is not None else None
                 else:
                     raise ValueError(num1_del)
                 if atom1 and atom2:
-                    length = atom2 - atom1
-                    bond_types_and_lengths[(chain_id, base_num)][bond_type] = length
+                    # find the vector connecting the two atoms
+                    atom_displacement = atom2.get_coord() - atom1.get_coord()
+                    distance = np.linalg.norm(atom_displacement)
+                    bond_types_and_lengths[pdb_chain_num][bond_type] = distance
+                    if axis1 is None or axis2 is None:
+                        axial_dist = np.nan
+                    elif base_num_to_annotation[cando_num][1] == terms.EDGE_TM and (num1_del == -1 or num2_del == -1):
+                        # axis switches at edge termini, so can't compute axial distance if using the previous base
+                        axial_dist = np.nan
+                    else:
+                        # project the vector onto the axis of each helix
+                        axial_disp_1 = project_vector(atom_displacement, axis1)
+                        axial_dist_1 = np.linalg.norm(axial_disp_1)
+                        axial_disp_2 = project_vector(atom_displacement, axis2)
+                        axial_dist_2 = np.linalg.norm(axial_disp_2)
+                        assert np.isclose(axial_dist_1, axial_dist_2)
+                        axial_dist = (axial_dist_1 + axial_dist_2) / 2
+                    # compute the angular distance using the Pythagorean theorem
+                    # distance^2 = axial_dist^2 + angular_dist^2
+                    angular_dist = np.sqrt(distance**2 - axial_dist**2)
+                    bond_types_and_axial_distances[pdb_chain_num][bond_type] = axial_dist
+                    bond_types_and_angular_distances[pdb_chain_num][bond_type] = angular_dist
             prev_base = base
-    return bond_types_and_lengths
+    return bond_types_and_lengths, bond_types_and_axial_distances, bond_types_and_angular_distances
+
+
+def project_vector(query, target):
+    """
+    Project vector query onto vector target.
+    :param query:
+    :param target:
+    :param query_center:
+    :param target_center:
+    :return:
+    """
+    assert query.shape == target.shape
+    projection = np.dot(query, target) / np.linalg.norm(target)
+    return projection

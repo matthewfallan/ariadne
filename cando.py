@@ -8,6 +8,8 @@ from collections import defaultdict
 import itertools
 from typing import Dict, List, Optional, Set, Tuple, Union
 
+import pandas as pd
+
 import seq_utils
 import terms
 
@@ -56,6 +58,68 @@ def get_connectivity(cando_file: str) -> Tuple[
     # List all of the base numbers in ascending order.
     base_nums = sorted(g_up)
     return base_nums, base_seq, g_up, g_dn, g_ax
+
+
+def get_pair_centers(cando_file: str):
+    """
+    Return the coordinates from a CanDo file.
+    :param cando_file:
+    :return:
+    """
+    xs = dict()
+    ys = dict()
+    zs = dict()
+    with open(cando_file) as f:
+        # Read lines until reaching the header.
+        header = 'dNode,"e0(1)","e0(2)","e0(3)"'
+        line = f.readline()
+        while line.strip() != header:
+            line = f.readline()
+        # Read the connectivity information.
+        line = f.readline()
+        while line.strip():
+            # Read the information, which is comma-delimited.
+            num, x, y, z = line.strip().split(",")
+            num, x, y, z = int(num), float(x), float(y), float(z)
+            # Record the information.
+            xs[num] = x
+            ys[num] = y
+            zs[num] = z
+            line = f.readline()
+    assert sorted(xs) == list(range(min(xs), max(xs) + 1))
+    centers = pd.DataFrame.from_dict({"x": xs, "y": ys, "z": zs})
+    return centers
+
+
+def get_pair_directions(cando_file: str):
+    """
+    Return the directions of the pairs from a CanDo file.
+    :param cando_file:
+    :return:
+    """
+    xs = dict()
+    ys = dict()
+    zs = dict()
+    with open(cando_file) as f:
+        # Read lines until reaching the header.
+        header = 'triad,"e1(1)","e1(2)","e1(3)","e2(1)","e2(2)","e2(3)","e3(1)","e3(2)","e3(3)"'
+        line = f.readline()
+        while line.strip() != header:
+            line = f.readline()
+        # Read the connectivity information.
+        line = f.readline()
+        while line.strip():
+            # Read the information, which is comma-delimited.
+            num, x1, y1, z1, x2, y2, z2, x3, y3, z3 = line.strip().split(",")
+            num, x3, y3, z3 = int(num), float(x3), float(y3), float(z3)
+            # Record the information.
+            xs[num] = x3
+            ys[num] = y3
+            zs[num] = z3
+            line = f.readline()
+    assert sorted(xs) == list(range(min(xs), max(xs) + 1))
+    directions = pd.DataFrame.from_dict({"x": xs, "y": ys, "z": zs})
+    return directions
 
 
 def switch_strand(base_nums: Union[Set[int], List[int]], g_ax):
