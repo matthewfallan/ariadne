@@ -182,7 +182,7 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
     for (pdb_chain, pdb_num) in bond_types_and_lengths:
         base_num = pdb_chain_num_to_cando_num[pdb_chain, pdb_num]
         strand, feature, direction = base_num_to_annotation[base_num]
-        annotation_label = f"{strand}, {feature}, {direction}"
+        annotation_label = f"{strand}_{feature}_{direction}"
         base_info = {"design": design,
                      "CanDo number": base_num,
                      "PDB chain": pdb_chain,

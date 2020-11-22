@@ -111,8 +111,7 @@ def analyze_designs(design_directories):
                                      id_vars=daedalus.BOND_ID_VARS,
                                      value_vars=daedalus.BOND_TYPE_VARS,
                                      var_name="bond type",
-                                     value_name="bond length (Å)",
-                                     )
+                                     value_name="bond length (Å)",)
     print("plotting bond lengths ...")
     plots.bond_length_distribution(designs_base_info_long)
 

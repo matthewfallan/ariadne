@@ -14,7 +14,7 @@ def color_annotations_groups_pdb(base_annotations, cando_num_to_pdb_chain_num, p
     :param base_annotations_groups:
     :return:
     """
-    default_color = "#888888"  # gray
+    default_color = "#dddddd"  # light gray
     color_map = {
         (terms.SCAF, terms.SCAF_XO): "#008888",  # dark cyan
         (terms.STAP, terms.SCAF_XO): "#00ffff",  # cyan
