@@ -63,10 +63,6 @@ def analyze_design(design_directory, clobber=False):
     # Compute and plot bond lengths.
     print("\tcomputing bond lengths ...")
     base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_ax, base_seq)
-    # FIXME: remove this later
-    fname = os.path.join(design_directory, 'ariadne', 'secondary.pdf')
-    signals = {i: np.random.random() for i in range(1, 1584 + 1)}
-    plots.secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signals)
     print("\twriting bond length file ...")
     base_info_file = os.path.join(outputs_directory, "base_info.tsv")
     base_info.to_csv(base_info_file, sep="\t", index=False)
