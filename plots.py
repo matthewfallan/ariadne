@@ -131,106 +131,62 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
     fig = plt.figure()
     fig.set_size_inches(10, 10)
     plt.axis("off")  # hide axes and ticks
-    for edge, (double_helix1, double_helix2) in enumerate(edges):
-        assert len(double_helix1) == len(double_helix2)
-        for pos, (num1, num2) in enumerate(zip(double_helix1, double_helix2)):
-            x = pos * X_INC
-            y1 = -edge * Y_INC
-            y2 = y1 - Y_SEP
-            xs[num1], ys[num1] = x, y1
-            xs[num2], ys[num2] = x, y2
-            plt.scatter([x], [y1], c=[color_map(signals.get(num1, np.nan))], s=BASE_SIZE, zorder=zorder["base"])
-            plt.scatter([x], [y2], c=[color_map(signals.get(num2, np.nan))], s=BASE_SIZE, zorder=zorder["base"])
-            plt.text(x, y1, seqs[num1], zorder=zorder["text"], **SEQ_PARAMS)
-            plt.text(x, y2, seqs[num2], zorder=zorder["text"], **SEQ_PARAMS)
-            if num1 == 1 or num1 % NUM_PERIOD == 0:
-                plt.text(x, y1 + NUM_SEP, num1, **NUM_PARAMS)
-            if num2 == 1 or num2 % NUM_PERIOD == 0:
-                plt.text(x, y2 - NUM_SEP, num2, **NUM_PARAMS)
-            loc1 = locs[num1]
-            loc2 = locs[num2]
-            if loc1.startswith(SCAF_XO):
-                # scaffold crossovers
-                if loc1.endswith("5"):
-                    # x position of the base to which it is crossing over
-                    x_xo = xs.get(g_dn[num1])
-                elif loc1.endswith("3"):
-                    x_xo = xs.get(g_up[num1])
-                else:
-                    raise ValueError()
-                if x_xo is not None:
-                    plt.plot([x, x_xo], [y1, y2], c=SCAF_XO_COLOR, zorder=zorder["feature"])
-            if loc2.startswith(SCAF_XO):
-                # scaffold crossovers
-                if loc2.endswith("5"):
-                    # x position of the base to which it is crossing over
-                    x_xo = xs.get(g_dn[num2])
-                elif loc2.endswith("3"):
-                    x_xo = xs.get(g_up[num2])
-                else:
-                    raise ValueError()
-                if x_xo is not None:
-                    plt.plot([x, x_xo], [y1, y2], c=SCAF_XO_COLOR, zorder=zorder["feature"])
-            if loc1.startswith(STAP_XO):
-                # staple crossovers
-                if loc1.endswith("5"):
-                    # x position of the base to which it is crossing over
-                    x_xo = xs.get(g_ax[g_up[g_ax[num1]]])
-                elif loc1.endswith("3"):
-                    # x position of the base to which it is crossing over
-                    x_xo = xs.get(g_ax[g_dn[g_ax[num1]]])
-                else:
-                    raise ValueError()
-                if x_xo is not None:
-                    plt.plot([x, x_xo], [y1, y2], c=STAP_XO_COLOR, zorder=zorder["feature"])
-            if loc2.startswith(STAP_XO):
-                # staple crossovers
-                if loc2.endswith("5"):
-                    x_xo = xs.get(g_ax[g_up[g_ax[num2]]])
-                elif loc2.endswith("3"):
-                    x_xo = xs.get(g_ax[g_dn[g_ax[num2]]])
-                else:
-                    raise ValueError()
-                if x_xo is not None:
-                    plt.plot([x, x_xo], [y2, y1], c=STAP_XO_COLOR, zorder=zorder["feature"])
-            if loc1.startswith(SCAF_TM):
-                # staple crossovers
-                if loc1.endswith("5"):
-                    x_tm = x - X_INC / 2
-                elif loc1.endswith("3"):
-                    x_tm = x + X_INC / 2
-                else:
-                    raise ValueError()
-                if x_tm is not None:
-                    plt.plot([x_tm, x_tm], [y1, y1 + TM_HEIGHT], c=SCAF_XO_COLOR, zorder=zorder["feature"])
-            if loc2.startswith(SCAF_TM):
-                # staple crossovers
-                if loc2.endswith("5"):
-                    x_tm = x + X_INC / 2
-                elif loc2.endswith("3"):
-                    x_tm = x - X_INC / 2
-                else:
-                    raise ValueError()
-                if x_tm is not None:
-                    plt.plot([x_tm, x_tm], [y2, y2 - TM_HEIGHT], c=SCAF_XO_COLOR, zorder=zorder["feature"])
-            if loc1.startswith(STAP_TM):
-                # staple crossovers
-                if loc1.endswith("5"):
-                    x_tm = x + X_INC / 2
-                elif loc1.endswith("3"):
-                    x_tm = x - X_INC / 2
-                else:
-                    raise ValueError()
-                if x_tm is not None:
-                    plt.plot([x_tm, x_tm], [y1, y1 + TM_HEIGHT], c=STAP_XO_COLOR, zorder=zorder["feature"])
-            if loc2.startswith(STAP_TM):
-                # staple crossovers
-                if loc2.endswith("5"):
-                    x_tm = x - X_INC / 2
-                elif loc2.endswith("3"):
-                    x_tm = x + X_INC / 2
-                else:
-                    raise ValueError()
-                if x_tm is not None:
-                    plt.plot([x_tm, x_tm], [y2, y2 - TM_HEIGHT], c=STAP_XO_COLOR, zorder=zorder["feature"])
+    for edge_i, double_helices in enumerate(edges):
+        for helix_i, helix in enumerate(double_helices):
+            for pos, num in enumerate(helix):
+                x = pos * X_INC
+                y = -edge_i * Y_INC + Y_SEP * [0, -1][helix_i]
+                xs[num], ys[num] = x, y
+                plt.scatter([x], [y], c=[color_map(signals.get(num, np.nan))], s=BASE_SIZE, zorder=zorder["base"])
+                plt.text(x, y, seqs[num], zorder=zorder["text"], **SEQ_PARAMS)
+                if num == 1 or num % NUM_PERIOD == 0:
+                    plt.text(x, y + NUM_SEP * [1, -1][helix_i], num, **NUM_PARAMS)
+                loc = locs[num]
+                if loc.startswith(SCAF_XO):
+                    # scaffold crossovers
+                    if loc.endswith("5"):
+                        # x position of the base to which it is crossing over
+                        x_xo = xs.get(g_dn[num])
+                        y_xo = ys.get(g_dn[num])
+                    elif loc.endswith("3"):
+                        x_xo = xs.get(g_up[num])
+                        y_xo = ys.get(g_up[num])
+                    else:
+                        raise ValueError()
+                    if x_xo is not None:
+                        plt.plot([x, x_xo], [y, y_xo], c=SCAF_XO_COLOR, zorder=zorder["feature"])
+                elif loc.startswith(STAP_XO):
+                    # staple crossovers
+                    if loc.endswith("5"):
+                        # x position of the base to which it is crossing over
+                        x_xo = xs.get(g_ax[g_up[g_ax[num]]])
+                        y_xo = ys.get(g_ax[g_up[g_ax[num]]])
+                    elif loc.endswith("3"):
+                        # x position of the base to which it is crossing over
+                        x_xo = xs.get(g_ax[g_dn[g_ax[num]]])
+                        y_xo = ys.get(g_ax[g_dn[g_ax[num]]])
+                    else:
+                        raise ValueError()
+                    if x_xo is not None:
+                        plt.plot([x, x_xo], [y, y_xo], c=STAP_XO_COLOR, zorder=zorder["feature"])
+                elif loc.startswith(SCAF_TM):
+                    # staple crossovers
+                    if loc.endswith("5"):
+                        x_tm = x + X_INC / 2 * [-1, 1][helix_i]
+                    elif loc.endswith("3"):
+                        x_tm = x + X_INC / 2 * [1, -1][helix_i]
+                    else:
+                        raise ValueError()
+                    if x_tm is not None:
+                        plt.plot([x_tm, x_tm], [y, y + TM_HEIGHT * [1, -1][helix_i]], c=SCAF_XO_COLOR, zorder=zorder["feature"])
+                elif loc.startswith(STAP_TM):
+                    # staple crossovers
+                    if loc.endswith("5"):
+                        x_tm = x + X_INC / 2 * [1, -1][helix_i]
+                    elif loc.endswith("3"):
+                        x_tm = x + X_INC / 2 * [-1, 1][helix_i]
+                    else:
+                        raise ValueError()
+                    if x_tm is not None:
+                        plt.plot([x_tm, x_tm], [y, y + TM_HEIGHT], c=STAP_XO_COLOR, zorder=zorder["feature"])
     plt.savefig(fname, dpi=600)
