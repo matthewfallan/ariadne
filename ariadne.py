@@ -15,6 +15,7 @@ import os
 import shutil
 import sys
 
+import numpy as np
 import pandas as pd
 
 import cando
@@ -56,12 +57,16 @@ def analyze_design(design_directory, clobber=False):
     base_nums, base_seq, g_up, g_dn, g_ax = cando.get_connectivity(cando_file)
     pair_directions = cando.get_pair_directions(cando_file)
     print("\tannotating bases ...")
-    base_annotations = daedalus.annotate_bases(g_up, g_dn, g_ax, vis_file)
+    base_annotations, edges, version = daedalus.annotate_bases(g_up, g_dn, g_ax, vis_file)
     cando_num_to_pdb_chain_num = daedalus.map_cando_num_to_pdb_chain_num(
         model, base_annotations, g_dn, g_ax)
     # Compute and plot bond lengths.
     print("\tcomputing bond lengths ...")
-    base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_ax)
+    base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_ax, base_seq)
+    # FIXME: remove this later
+    fname = os.path.join(design_directory, 'ariadne', 'secondary.pdf')
+    signals = {i: np.random.random() for i in range(1, 1584 + 1)}
+    plots.secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signals)
     print("\twriting bond length file ...")
     base_info_file = os.path.join(outputs_directory, "base_info.tsv")
     base_info.to_csv(base_info_file, sep="\t", index=False)
@@ -69,7 +74,7 @@ def analyze_design(design_directory, clobber=False):
     print("\twriting ChimeraX script ...")
     chimerax_script = os.path.join(outputs_directory, "chimerax_color.txt")
     chimerax.color_annotations_groups_pdb(base_annotations, cando_num_to_pdb_chain_num, pdb_file, chimerax_script)
-    return base_info, dssr_info
+    return edges, g_up, g_dn, g_ax, base_info, dssr_info
 
 
 def analyze_designs(design_directories):
@@ -81,8 +86,8 @@ def analyze_designs(design_directories):
         design = os.path.basename(design_directory_rel)
         design_directory_abs = os.path.abspath(design_directory_rel)
         try:
-            base_info, dssr_info = analyze_design(design_directory_abs, clobber=True)
-        except:
+            edges, g_up, g_dn, g_ax, base_info, dssr_info = analyze_design(design_directory_abs, clobber=True)
+        except ZeroDivisionError:
             designs_failed.append(design)
         else:
             designs_succeeded.append(design)

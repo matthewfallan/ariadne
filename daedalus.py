@@ -57,7 +57,7 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
         failed_versions = list()
         for version in [1, 2]:
             try:
-                base_annotations_vis = vis.annotate_bases(vis_file, version)
+                base_annotations_vis, edges = vis.annotate_bases(vis_file, version)
             except AssertionError:
                 failed_versions.append(version)
             else:
@@ -139,7 +139,7 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
     base_annotations[terms.STAP, terms.VERTEX, 0] = vert_stap_nums_cando
     base_annotation_nums = sorted([base_num for annot_nums in base_annotations.values() for base_num in annot_nums])
     assert base_annotation_nums == base_nums
-    return base_annotations
+    return base_annotations, edges, version
 
 
 def map_cando_num_to_pdb_chain_num(model: Model, base_annotations, g_dn, g_ax):
@@ -168,11 +168,11 @@ def map_cando_num_to_pdb_chain_num(model: Model, base_annotations, g_dn, g_ax):
     return cando_num_to_pdb_chain_num
 
 
-BOND_ID_VARS = ["design", "CanDo number", "PDB chain", "PDB number", "location"]
+BOND_ID_VARS = ["design", "CanDo number", "PDB chain", "PDB number", "base", "location"]
 BOND_TYPE_VARS = [f"{a1}-{a2} {dist}" for (n1, a1), (n2, a2) in pdb_tools.BACKBONE_BONDS for dist in ["length", "axial", "planar"]]
 BOND_INFO_FIELDS = BOND_ID_VARS + BOND_TYPE_VARS
 
-def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_ax):
+def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_ax, base_seq):
     base_num_to_annotation = {base_num: annotation for annotation, base_nums in base_annotations.items() for base_num in
                               base_nums}
     pdb_chain_num_to_cando_num = {pdb_chain_num: base_num for base_num, pdb_chain_num in
@@ -187,6 +187,7 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
                      "CanDo number": base_num,
                      "PDB chain": pdb_chain,
                      "PDB number": pdb_num,
+                     "base": base_seq[base_num],
                      "location": annotation_label}
         base_bond_types_and_lengths = bond_types_and_lengths[pdb_chain, pdb_num]
         for bond_type, bond_length in base_bond_types_and_lengths.items():

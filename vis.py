@@ -4,7 +4,7 @@ ARIADNE - Vis module
 Functions for processing the ASCII visualization of origami structure.
 """
 
-from collections import defaultdict
+from collections import defaultdict, deque
 import re
 
 import seq_utils
@@ -21,7 +21,9 @@ def annotate_bases(vis_file, version):
     blocks = re.split("Vertex [0-9]+ \(top\) to [0-9]+ \(bottom\), Edge [0-9]+", contents)[1:]
     indexes = list()
     base_annotations = defaultdict(set)
+    edges = list()
     for block in blocks:
+        double_helices = [deque(), deque()]  # two double helices per edge
         block_lines = [line for line in block.strip().split("\n")[1: -1] if line.strip()]
         n_lines = len(block_lines)
         for i_line, line in enumerate(block_lines, start=1):
@@ -37,6 +39,8 @@ def annotate_bases(vis_file, version):
             indexes.append(idx2)
             num1 = idx1 + 1
             num2 = idx2 + 1
+            double_helices[0].appendleft(num1)  # add to 5' side
+            double_helices[1].append(num2)  # add to 3' side
             annot1, annot2 = None, None
             if i_line == 1:
                 annot1 = terms.EDGE_TM, 3  # at the 3' end of an edge
@@ -97,8 +101,12 @@ def annotate_bases(vis_file, version):
             assert annot1 and annot2
             base_annotations[annot1].add(num1)
             base_annotations[annot2].add(num2)
+        edges.append(double_helices)
     assert sorted(indexes) == list(range(min(indexes), max(indexes))) + [max(indexes)]
     all_nums = sorted([num for annot, nums in base_annotations.items() for num in nums])
     assert all_nums == list(range(all_nums[0], all_nums[-1] + 1))
+    edges = [sorted([list(helix1), list(helix2)], key=min) for helix1, helix2 in edges]
+    edges = sorted([[helix1, list(reversed(helix2))] for helix1, helix2 in edges],
+                   key=lambda x: min(map(min, x)))
     # Convert to dict.
-    return dict(base_annotations)
+    return dict(base_annotations), edges
