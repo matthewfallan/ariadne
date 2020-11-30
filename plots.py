@@ -188,5 +188,5 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
                     else:
                         raise ValueError()
                     if x_tm is not None:
-                        plt.plot([x_tm, x_tm], [y, y + TM_HEIGHT], c=STAP_XO_COLOR, zorder=zorder["feature"])
+                        plt.plot([x_tm, x_tm], [y, y + TM_HEIGHT * [-1, 1][helix_i]], c=STAP_XO_COLOR, zorder=zorder["feature"])
     plt.savefig(fname, dpi=600)
