@@ -139,8 +139,8 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
             y2 = y1 - Y_SEP
             xs[num1], ys[num1] = x, y1
             xs[num2], ys[num2] = x, y2
-            plt.scatter([x], [y1], c=[color_map(signals.get(num1))], s=BASE_SIZE, zorder=zorder["base"])
-            plt.scatter([x], [y2], c=[color_map(signals.get(num2))], s=BASE_SIZE, zorder=zorder["base"])
+            plt.scatter([x], [y1], c=[color_map(signals.get(num1, np.nan))], s=BASE_SIZE, zorder=zorder["base"])
+            plt.scatter([x], [y2], c=[color_map(signals.get(num2, np.nan))], s=BASE_SIZE, zorder=zorder["base"])
             plt.text(x, y1, seqs[num1], zorder=zorder["text"], **SEQ_PARAMS)
             plt.text(x, y2, seqs[num2], zorder=zorder["text"], **SEQ_PARAMS)
             if num1 == 1 or num1 % NUM_PERIOD == 0:
