@@ -192,7 +192,7 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
                 else:
                     raise ValueError()
                 if x_xo is not None:
-                    plt.plot([x, x_xo], [y1, y2], c=STAP_XO_COLOR, zorder=zorder["feature"])
+                    plt.plot([x, x_xo], [y2, y1], c=STAP_XO_COLOR, zorder=zorder["feature"])
             if loc1.startswith(SCAF_TM):
                 # staple crossovers
                 if loc1.endswith("5"):
