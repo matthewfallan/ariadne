@@ -22,6 +22,10 @@ def get_rc_rna(seq):
     return "".join(map(lambda x: comp_base_rna[x], reversed(seq)))
 
 
+def switch_direction(direction):
+    return {"0": "0", "5": "3", "3": "5", 0: 0, 5: 3, 3: 5}[direction]
+
+
 def yes_no(question):
     yes = ["y", "ye", "yes"]
     no = ["n", "no"]
@@ -34,3 +38,7 @@ def yes_no(question):
 def escape_path(path):
     escaped = path.replace("(", "\(").replace(")", "\)").replace(" ", "\ ")
     return escaped
+
+
+def get_gc_content(seq):
+    return (seq.count("G") + seq.count("C")) / len(seq)
