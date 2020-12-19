@@ -104,7 +104,7 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
     TM_HEIGHT = 3  # height of terminus markers
     SEQ_PARAMS = {"ha": "center", "va": "center", "size": 6}
     NUM_PARAMS = {"ha": "center", "va": "center", "size": 8}
-    COLORS = ["#ccbbff", 0.01, "yellow", 0.03, "red"]
+    COLORS = ["#7fc2ff", 0.01, "#d1bb3a", 0.03, "#c61e61"]
     def color_map(value):
         if np.isnan(value):
             return "#e0e0e0"
@@ -118,7 +118,7 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
                 color = item
         return color
     SCAF_XO_COLOR = "#000000"
-    STAP_XO_COLOR = "#c0c0c0"
+    STAP_XO_COLOR = "#50e350"
     SCAF_XO = f"{terms.SCAF}_{terms.SCAF_XO}"
     STAP_XO = f"{terms.SCAF}_{terms.STAP_XO}"
     SCAF_TM = f"{terms.SCAF}_{terms.SCAF_TM}"
