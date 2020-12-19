@@ -62,7 +62,7 @@ def analyze_design(design_directory, clobber=False):
         model, base_annotations, g_dn, g_ax)
     # Compute and plot bond lengths.
     print("\tcomputing bond lengths ...")
-    base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_ax, base_seq)
+    base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_up, g_dn, g_ax, base_seq)
     print("\twriting bond length file ...")
     base_info_file = os.path.join(outputs_directory, "base_info.tsv")
     base_info.to_csv(base_info_file, sep="\t", index=False)

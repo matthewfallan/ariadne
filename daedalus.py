@@ -168,11 +168,36 @@ def map_cando_num_to_pdb_chain_num(model: Model, base_annotations, g_dn, g_ax):
     return cando_num_to_pdb_chain_num
 
 
+def walk_segment(bases_info_df, g_up, g_dn, base_num_start):
+    segment_5 = walk_segment_one_way(bases_info_df, g_up, g_dn, 5, base_num_start)
+    segment_3 = reversed(walk_segment_one_way(bases_info_df, g_up, g_dn, 5, base_num_start))
+    assert base_num_start == segment_5[-1] == segment_3[0]
+    segment = segment_5 + segment_3[1:]
+    return segment
+
+
+def walk_segment_one_way(bases_info_df, g_up, g_dn, walk_direction, base_num_start):
+    base_nums = [base_num_start]
+    current_base = base_num_start
+    strand, feature, direction = bases_info_df.loc[current_base, "location"].split("_")
+    print(current_base, strand, feature, direction)
+    while feature in [terms.MIDDLE, terms.VERTEX]:
+        if walk_direction == 5:
+            current_base = g_up.get(current_base)
+        elif walk_direction == 3:
+            current_base = g_dn.get(current_base)
+        else:
+            raise ValueError(walk_direction)
+        strand, feature, direction = bases_info_df.loc[current_base, "location"].split("_")
+        base_nums.append(current_base)
+    return base_nums
+
+
 BOND_ID_VARS = ["design", "CanDo number", "PDB chain", "PDB number", "base", "location"]
 BOND_TYPE_VARS = [f"{a1}-{a2} {dist}" for (n1, a1), (n2, a2) in pdb_tools.BACKBONE_BONDS for dist in ["length", "axial", "planar"]]
 BOND_INFO_FIELDS = BOND_ID_VARS + BOND_TYPE_VARS
 
-def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_ax, base_seq):
+def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_up, g_dn, g_ax, base_seq):
     base_num_to_annotation = {base_num: annotation for annotation, base_nums in base_annotations.items() for base_num in
                               base_nums}
     pdb_chain_num_to_cando_num = {pdb_chain_num: base_num for base_num, pdb_chain_num in
@@ -183,12 +208,14 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
         base_num = pdb_chain_num_to_cando_num[pdb_chain, pdb_num]
         strand, feature, direction = base_num_to_annotation[base_num]
         annotation_label = f"{strand}_{feature}_{direction}"
+        # Add the basic base annotations.
         base_info = {"design": design,
                      "CanDo number": base_num,
                      "PDB chain": pdb_chain,
                      "PDB number": pdb_num,
                      "base": base_seq[base_num],
                      "location": annotation_label}
+        # Add the bond types and lengths
         base_bond_types_and_lengths = bond_types_and_lengths[pdb_chain, pdb_num]
         for bond_type, bond_length in base_bond_types_and_lengths.items():
             ((num1_del, atom1), (num2_del, atom2)) = bond_type
@@ -205,5 +232,18 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
             bond_type_label = f"{atom1}-{atom2} planar"
             base_info[bond_type_label] = planar_dist
         bases_info.append(base_info)
+    # Convert to dataframe
     bases_info_df = pd.DataFrame.from_records(bases_info, columns=BOND_INFO_FIELDS)
+    print(bases_info_df)
+    # Compute segment-based properties
+    segments = list()
+    end_5s = list()
+    end_3s = list()
+    meltings = list()
+    for base_index in bases_info_df.index:
+        base_num = bases_info_df.loc[base_index, "CanDo number"]
+        print("index", base_index, "num", base_num)
+        segment = walk_segment(bases_info_df, g_up, g_dn, base_num)
+        print(base_num, segment)
+        input()
     return bases_info_df
