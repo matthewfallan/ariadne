@@ -271,10 +271,10 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
         features_end_5.append(feature_end_5)
         strand, feature_end_3, direction = bases_info_df.loc[segment[-1], "location"].split("_")
         features_end_3.append(feature_end_3)
-    bases_info_df["segment"] = segment_seqs
-    bases_info_df["segment length"] = list(map(len, segment_seqs))
-    bases_info_df["segment GC content"] = list(map(seq_utils.get_gc_content, segment_seqs))
-    bases_info_df["segment melting temp"] = list(map(get_melt, segment_seqs))
-    bases_info_df["segment 5' feature"] = features_end_5
-    bases_info_df["segment 3' feature"] = features_end_3
+    bases_info_df["SegmentSeq"] = segment_seqs
+    bases_info_df["SegmentLength"] = list(map(len, segment_seqs))
+    bases_info_df["SegmentGC"] = list(map(seq_utils.get_gc_content, segment_seqs))
+    bases_info_df["SegmentMelt"] = list(map(get_melt, segment_seqs))
+    bases_info_df["Segment5Feature"] = features_end_5
+    bases_info_df["Segment3Feature"] = features_end_3
     return bases_info_df
