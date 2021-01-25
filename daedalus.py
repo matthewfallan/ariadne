@@ -53,18 +53,21 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
     :return:
     """
     if version is None:
-        # If no version is specified, infer the version from the txt file.
-        succeeded_versions = list()
-        failed_versions = list()
-        for version in [1, 2]:
-            try:
-                base_annotations_vis, edges = vis.annotate_bases(vis_file, version)
-            except AssertionError:
-                failed_versions.append(version)
-            else:
-                succeeded_versions.append(version)
-        assert len(succeeded_versions) == 1
-        version = succeeded_versions[0]
+        feasible_versions = [1, 2]
+    else:
+        feasible_versions = [version]
+    # If no version is specified, infer the version from the txt file.
+    succeeded_versions = list()
+    failed_versions = list()
+    for version in feasible_versions:
+        try:
+            base_annotations_vis, edges = vis.annotate_bases(vis_file, version)
+        except AssertionError:
+            failed_versions.append(version)
+        else:
+            succeeded_versions.append(version)
+    assert len(succeeded_versions) == 1
+    version = succeeded_versions[0]
     base_nums = sorted(g_up)
     assert base_nums == sorted(g_dn) == sorted(g_ax)
     # Get the base annotations from CanDo and the ASCII vis file.
