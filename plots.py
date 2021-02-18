@@ -33,13 +33,12 @@ def dssr_analysis(dssr_info):
         plt.close()
 
 
-def bond_length_distribution(bond_lengths):
+def bond_length_distribution(bond_lengths, design_order=None):
     sns.set_style("darkgrid")
     sns.despine()
     # bond lengths vs bond type
     fig = plt.figure()
     fig.set_size_inches(14, 4)
-    design_order = ["LibFig_rPB66", "LibFig_rOct66", "rPB66_v2", "rOct66_v2"]
     ax = sns.stripplot(data=bond_lengths, x="bond length (Å)", y="bond type", hue="design", hue_order=design_order, orient="h", size=2, dodge=True)
     ax.set_aspect(1.0)
     ax.set_yticks(np.array(ax.get_yticks()) + 0.5, minor=True)

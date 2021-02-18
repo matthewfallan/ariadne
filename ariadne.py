@@ -78,9 +78,11 @@ def analyze_designs(design_directories):
     designs_failed = list()
     designs_base_info = list()
     designs_dssr_info = defaultdict(list)
+    designs = list()
     for design_directory_rel in design_directories:
-        design = os.path.basename(design_directory_rel)
         design_directory_abs = os.path.abspath(design_directory_rel)
+        design = os.path.basename(design_directory_abs)
+        designs.append(design)
         try:
             edges, g_up, g_dn, g_ax, base_info, dssr_info = analyze_design(design_directory_abs, clobber=True)
         except ZeroDivisionError:
@@ -114,7 +116,7 @@ def analyze_designs(design_directories):
                                      var_name="bond type",
                                      value_name="bond length (Å)",)
     print("plotting bond lengths ...")
-    plots.bond_length_distribution(designs_base_info_long)
+    plots.bond_length_distribution(designs_base_info_long, design_order=designs)
 
 
 if __name__ == "__main__":
