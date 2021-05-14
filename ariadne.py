@@ -30,7 +30,7 @@ import seq_utils
 OUTPUTS_DIRECTORY_NAME = "ariadne"
 
 
-def analyze_design(design_directory, clobber=False):
+def analyze_design(design_directory, compute_bond_lengths=True, clobber=False):
     design = os.path.basename(design_directory)
     print(design)
     outputs_directory = os.path.join(design_directory, OUTPUTS_DIRECTORY_NAME)
@@ -60,20 +60,19 @@ def analyze_design(design_directory, clobber=False):
     base_annotations, edges, version = daedalus.annotate_bases(g_up, g_dn, g_ax, vis_file)
     cando_num_to_pdb_chain_num = daedalus.map_cando_num_to_pdb_chain_num(
         model, base_annotations, g_dn, g_ax)
-    # Compute and plot bond lengths.
-    print("\tcomputing bond lengths ...")
-    base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_up, g_dn, g_ax, base_seq)
-    print("\twriting bond length file ...")
+    # Compute bond lengths if desired and compile all base information.
+    print("\tcompiling all base information ...")
+    base_info = daedalus.assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_up, g_dn, g_ax, base_seq, compute_bond_lengths=compute_bond_lengths)
+    print("\twriting results files ...")
     base_info_file = os.path.join(outputs_directory, "base_info.tsv")
     base_info.to_csv(base_info_file, sep="\t", index=False)
     # Make a script to color the PDB by annotation.
-    print("\twriting ChimeraX script ...")
     chimerax_script = os.path.join(outputs_directory, "chimerax_color.txt")
     chimerax.color_annotations_groups_pdb(base_annotations, cando_num_to_pdb_chain_num, pdb_file, chimerax_script)
     return edges, g_up, g_dn, g_ax, base_info, dssr_info
 
 
-def analyze_designs(design_directories):
+def analyze_designs(design_directories, compute_bond_lengths=True):
     designs_succeeded = list()
     designs_failed = list()
     designs_base_info = list()
@@ -84,7 +83,7 @@ def analyze_designs(design_directories):
         design = os.path.basename(design_directory_abs)
         designs.append(design)
         try:
-            edges, g_up, g_dn, g_ax, base_info, dssr_info = analyze_design(design_directory_abs, clobber=True)
+            edges, g_up, g_dn, g_ax, base_info, dssr_info = analyze_design(design_directory_abs, compute_bond_lengths=compute_bond_lengths, clobber=True)
         except ZeroDivisionError:
             designs_failed.append(design)
         else:
@@ -108,15 +107,16 @@ def analyze_designs(design_directories):
     designs_base_info = pd.concat(designs_base_info, axis=0, ignore_index=True)
     designs_base_info_file = os.path.join(".", "base_info.tsv")
     designs_base_info.to_csv(designs_base_info_file, sep="\t", index=False)
-    # Melt the table.
-    print("reformatting bond lengths ...")
-    designs_base_info_long = pd.melt(designs_base_info,
-                                     id_vars=daedalus.BOND_ID_VARS,
-                                     value_vars=daedalus.BOND_TYPE_VARS,
-                                     var_name="bond type",
-                                     value_name="bond length (Å)",)
-    print("plotting bond lengths ...")
-    plots.bond_length_distribution(designs_base_info_long, design_order=designs)
+    if compute_bond_lengths:
+        # Melt the table.
+        print("reformatting bond lengths ...")
+        designs_base_info_long = pd.melt(designs_base_info,
+                                         id_vars=daedalus.BOND_ID_VARS,
+                                         value_vars=daedalus.BOND_TYPE_VARS,
+                                         var_name="bond type",
+                                         value_name="bond length (Å)",)
+        print("plotting bond lengths ...")
+        plots.bond_length_distribution(designs_base_info_long, design_order=designs)
 
 
 if __name__ == "__main__":

@@ -213,7 +213,6 @@ def walk_segment_one_way(bases_info_df, g_up, g_dn, walk_direction, base_num_sta
 
 BOND_ID_VARS = ["design", "CanDo number", "PDB chain", "PDB number", "base", "location"]
 BOND_TYPE_VARS = [f"{a1}-{a2} {dist}" for (n1, a1), (n2, a2) in pdb_tools.BACKBONE_BONDS for dist in ["length", "axial", "planar"]]
-BOND_INFO_FIELDS = BOND_ID_VARS + BOND_TYPE_VARS
 TM_SALTCORR = 6
 
 
@@ -221,43 +220,51 @@ def get_melt(seq):
     return mt.Tm_NN(seq, nn_table=mt.R_DNA_NN1, saltcorr=6)
 
 
-def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_up, g_dn, g_ax, base_seq):
+def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_num, pair_directions, g_up, g_dn, g_ax, base_seq, compute_bond_lengths=True):
     base_num_to_annotation = {base_num: annotation for annotation, base_nums in base_annotations.items() for base_num in
                               base_nums}
     pdb_chain_num_to_cando_num = {pdb_chain_num: base_num for base_num, pdb_chain_num in
                                   cando_num_to_pdb_chain_num.items()}
-    bond_types_and_lengths, bond_types_and_axial_distances, bond_types_and_planar_distances = pdb_tools.get_bond_types_and_lengths(model, pdb_chain_num_to_cando_num, pair_directions, base_num_to_annotation, g_ax)
+    if compute_bond_lengths:
+        bond_types_and_lengths, bond_types_and_axial_distances, bond_types_and_planar_distances = pdb_tools.get_bond_types_and_lengths(model, pdb_chain_num_to_cando_num, pair_directions, base_num_to_annotation, g_ax)
+        bond_info_fields = BOND_ID_VARS + BOND_TYPE_VARS
+    else:
+        bond_info_fields = BOND_ID_VARS
     bases_info = list()
-    for (pdb_chain, pdb_num) in bond_types_and_lengths:
-        base_num = pdb_chain_num_to_cando_num[pdb_chain, pdb_num]
-        strand, feature, direction = base_num_to_annotation[base_num]
-        annotation_label = f"{strand}_{feature}_{direction}"
-        # Add the basic base annotations.
-        base_info = {"design": design,
-                     "CanDo number": base_num,
-                     "PDB chain": pdb_chain,
-                     "PDB number": pdb_num,
-                     "base": base_seq[base_num],
-                     "location": annotation_label}
-        # Add the bond types and lengths
-        base_bond_types_and_lengths = bond_types_and_lengths[pdb_chain, pdb_num]
-        for bond_type, bond_length in base_bond_types_and_lengths.items():
-            ((num1_del, atom1), (num2_del, atom2)) = bond_type
-            bond_type_label = f"{atom1}-{atom2} length"
-            base_info[bond_type_label] = bond_length
-        base_bond_types_and_axial_distances = bond_types_and_axial_distances[pdb_chain, pdb_num]
-        for bond_type, axial_dist in base_bond_types_and_axial_distances.items():
-            ((num1_del, atom1), (num2_del, atom2)) = bond_type
-            bond_type_label = f"{atom1}-{atom2} axial"
-            base_info[bond_type_label] = axial_dist
-        base_bond_types_and_planar_distances = bond_types_and_planar_distances[pdb_chain, pdb_num]
-        for bond_type, planar_dist in base_bond_types_and_planar_distances.items():
-            ((num1_del, atom1), (num2_del, atom2)) = bond_type
-            bond_type_label = f"{atom1}-{atom2} planar"
-            base_info[bond_type_label] = planar_dist
-        bases_info.append(base_info)
+    for chain in model:
+        pdb_chain = chain.get_id()
+        for residue in chain:
+            pdb_num = residue.get_id()[1]
+            base_num = pdb_chain_num_to_cando_num[pdb_chain, pdb_num]
+            strand, feature, direction = base_num_to_annotation[base_num]
+            annotation_label = f"{strand}_{feature}_{direction}"
+            # Add the basic base annotations.
+            base_info = {"design": design,
+                         "CanDo number": base_num,
+                         "PDB chain": pdb_chain,
+                         "PDB number": pdb_num,
+                         "base": base_seq[base_num],
+                         "location": annotation_label}
+            if compute_bond_lengths:
+                # Add the bond types and lengths
+                base_bond_types_and_lengths = bond_types_and_lengths[pdb_chain, pdb_num]
+                for bond_type, bond_length in base_bond_types_and_lengths.items():
+                    ((num1_del, atom1), (num2_del, atom2)) = bond_type
+                    bond_type_label = f"{atom1}-{atom2} length"
+                    base_info[bond_type_label] = bond_length
+                base_bond_types_and_axial_distances = bond_types_and_axial_distances[pdb_chain, pdb_num]
+                for bond_type, axial_dist in base_bond_types_and_axial_distances.items():
+                    ((num1_del, atom1), (num2_del, atom2)) = bond_type
+                    bond_type_label = f"{atom1}-{atom2} axial"
+                    base_info[bond_type_label] = axial_dist
+                base_bond_types_and_planar_distances = bond_types_and_planar_distances[pdb_chain, pdb_num]
+                for bond_type, planar_dist in base_bond_types_and_planar_distances.items():
+                    ((num1_del, atom1), (num2_del, atom2)) = bond_type
+                    bond_type_label = f"{atom1}-{atom2} planar"
+                    base_info[bond_type_label] = planar_dist
+            bases_info.append(base_info)
     # Convert to dataframe
-    bases_info_df = pd.DataFrame.from_records(bases_info, columns=BOND_INFO_FIELDS)
+    bases_info_df = pd.DataFrame.from_records(bases_info, columns=bond_info_fields)
     bases_info_df.index = bases_info_df["CanDo number"]
     # Compute segment-based properties
     segment_seqs = list()
