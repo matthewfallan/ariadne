@@ -9,6 +9,7 @@ from typing import Tuple
 
 from Bio.PDB.Model import Model
 import Bio.SeqUtils.MeltingTemp as mt
+import numpy as np
 import pandas as pd
 
 import cando
@@ -96,6 +97,9 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
                                           base_annotations_cando.get((terms.SCAF, terms.XO, fwd, False), set()))
             all_xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO, fwd, True), set()) |
                                           base_annotations_cando.get((terms.STAP, terms.XO, rev, False), set()))
+            print(scaf_xovers_scaf_nums_vis)
+            print(all_xovers_scaf_nums_cando)
+            print(scaf_xovers_scaf_nums_vis - all_xovers_scaf_nums_cando)
             assert not scaf_xovers_scaf_nums_vis - all_xovers_scaf_nums_cando
             assert not scaf_xovers_stap_nums_vis - all_xovers_stap_nums_cando
             base_annotations[terms.SCAF, terms.SCAF_XO, fwd] = scaf_xovers_scaf_nums_vis
@@ -172,18 +176,18 @@ def map_cando_num_to_pdb_chain_num(model: Model, base_annotations, g_dn, g_ax):
     return cando_num_to_pdb_chain_num
 
 
-def walk_segment(bases_info_df, g_up, g_dn, base_num_start):
-    segment_5 = list(reversed(walk_segment_one_way(bases_info_df, g_up, g_dn, "5", base_num_start)))
-    segment_3 = walk_segment_one_way(bases_info_df, g_up, g_dn, "3", base_num_start)
+def walk_segment(base_info_df, g_up, g_dn, base_num_start):
+    segment_5 = list(reversed(walk_segment_one_way(base_info_df, g_up, g_dn, "5", base_num_start)))
+    segment_3 = walk_segment_one_way(base_info_df, g_up, g_dn, "3", base_num_start)
     assert base_num_start == segment_5[-1] == segment_3[0]
     segment = segment_5 + segment_3[1:]
     return segment
 
 
-def walk_segment_one_way(bases_info_df, g_up, g_dn, walk_direction, base_num_start):
+def walk_segment_one_way(base_info_df, g_up, g_dn, walk_direction, base_num_start):
     base_nums = list()
     current_base = base_num_start
-    strand, feature, direction = bases_info_df.loc[current_base, "location"].split("_")
+    strand, feature, direction = base_info_df.loc[current_base, "Feature"].split("_")
     vertex = feature == terms.VERTEX
     is_segment_end = False
     while not is_segment_end:
@@ -205,13 +209,13 @@ def walk_segment_one_way(bases_info_df, g_up, g_dn, walk_direction, base_num_sta
                 current_base = g_dn.get(current_base)
             else:
                 raise ValueError(walk_direction)
-            strand, feature, direction = bases_info_df.loc[current_base, "location"].split("_")
+            strand, feature, direction = base_info_df.loc[current_base, "Feature"].split("_")
         if vertex:
             is_segment_end = feature != terms.VERTEX
     return base_nums
 
 
-BOND_ID_VARS = ["design", "CanDo number", "PDB chain", "PDB number", "base", "location"]
+BOND_ID_VARS = ["Design", "CanDo number", "PDB chain", "PDB number", "Base", "Feature"]
 BOND_TYPE_VARS = [f"{a1}-{a2} {dist}" for (n1, a1), (n2, a2) in pdb_tools.BACKBONE_BONDS for dist in ["length", "axial", "planar"]]
 TM_SALTCORR = 6
 
@@ -239,12 +243,12 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
             strand, feature, direction = base_num_to_annotation[base_num]
             annotation_label = f"{strand}_{feature}_{direction}"
             # Add the basic base annotations.
-            base_info = {"design": design,
+            base_info = {"Design": design,
                          "CanDo number": base_num,
                          "PDB chain": pdb_chain,
                          "PDB number": pdb_num,
-                         "base": base_seq[base_num],
-                         "location": annotation_label}
+                         "Base": base_seq[base_num],
+                         "Feature": annotation_label}
             if compute_bond_lengths:
                 # Add the bond types and lengths
                 base_bond_types_and_lengths = bond_types_and_lengths[pdb_chain, pdb_num]
@@ -264,24 +268,115 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
                     base_info[bond_type_label] = planar_dist
             bases_info.append(base_info)
     # Convert to dataframe
-    bases_info_df = pd.DataFrame.from_records(bases_info, columns=bond_info_fields)
-    bases_info_df.index = bases_info_df["CanDo number"]
+    base_info_df = pd.DataFrame.from_records(bases_info, columns=bond_info_fields)
+    base_info_df.index = base_info_df["CanDo number"]
     # Compute segment-based properties
+    segment_5ps = list()
+    segment_3ps = list()
     segment_seqs = list()
     features_end_5 = list()
     features_end_3 = list()
-    for base_num in bases_info_df.index:
-        segment = walk_segment(bases_info_df, g_up, g_dn, base_num)
-        segment_seq = "".join([bases_info_df.loc[base_num, "base"] for base_num in segment])
+    for base_num in base_info_df.index:
+        segment = walk_segment(base_info_df, g_up, g_dn, base_num)
+        segment_5ps.append(segment[0])
+        segment_3ps.append(segment[-1])
+        segment_seq = "".join([base_info_df.loc[base_num, "Base"] for base_num in segment])
         segment_seqs.append(segment_seq)
-        strand, feature_end_5, direction = bases_info_df.loc[segment[0], "location"].split("_")
+        strand, feature_end_5, direction = base_info_df.loc[segment[0], "Feature"].split("_")
         features_end_5.append(feature_end_5)
-        strand, feature_end_3, direction = bases_info_df.loc[segment[-1], "location"].split("_")
+        strand, feature_end_3, direction = base_info_df.loc[segment[-1], "Feature"].split("_")
         features_end_3.append(feature_end_3)
-    bases_info_df["SegmentSeq"] = segment_seqs
-    bases_info_df["SegmentLength"] = list(map(len, segment_seqs))
-    bases_info_df["SegmentGC"] = list(map(seq_utils.get_gc_content, segment_seqs))
-    bases_info_df["SegmentMelt"] = list(map(get_melt, segment_seqs))
-    bases_info_df["Segment5Feature"] = features_end_5
-    bases_info_df["Segment3Feature"] = features_end_3
-    return bases_info_df
+    base_info_df["Segment5'"] = segment_5ps
+    base_info_df["Segment3'"] = segment_3ps
+    #base_info_df["SegmentSeq"] = segment_seqs
+    #base_info_df["SegmentLength"] = list(map(len, segment_seqs))
+    #assert all(base_info_df["SegmentLength"] == base_info_df["Segment3'"] - base_info_df["Segment5'"] + 1)
+    #base_info_df["SegmentGC"] = list(map(seq_utils.get_gc_content, segment_seqs))
+    #base_info_df["SegmentTm"] = list(map(get_melt, segment_seqs))
+    base_info_df["Segment5'Feature"] = features_end_5
+    base_info_df["Segment3'Feature"] = features_end_3
+    return base_info_df
+
+
+def get_unique_segments(base_info_df):
+    unique_segments = sorted({(base_info_df.loc[base_num, "Segment5'"], base_info_df.loc[base_num, "Segment3'"]) for base_num in base_info_df.index})
+    return unique_segments
+
+
+def get_unique_segment_seqs(base_info_df):
+    bases = base_info_df["Base"]
+    unique_segments = get_unique_segments(base_info_df)
+    unique_segment_seqs = {(seg_5p, seg_3p): "".join(bases.loc[seg_5p: seg_3p]) for seg_5p, seg_3p in unique_segments}
+    return unique_segment_seqs
+
+
+def get_segment_seqs(base_info_df, update=False):
+    unique_segment_seqs = get_unique_segment_seqs(base_info_df)
+    all_segment_seqs = pd.Series([unique_segment_seqs[seg_5p, seg_3p] for seg_5p, seg_3p in zip(base_info_df["Segment5'"], base_info_df["Segment3'"])], index=base_info_df.index)
+    if update:
+        base_info_df["SegmentSeq"] = all_segment_seqs
+    return all_segment_seqs
+
+
+def get_segment_end_dists(base_info_df):
+    base_nums = base_info_df.index
+    dist_5p = base_nums - base_info_df["Segment5'"]
+    dist_3p = base_info_df["Segment3'"] - base_nums
+    assert all(dist_5p >= 0)
+    assert all(dist_3p >= 0)
+    return dist_5p, dist_3p
+
+
+def get_weighted_gc(base_info_df, weight_func, update=False):
+    weighted_gcs = pd.Series(index=base_info_df.index)
+    weighted_gcs.name = "WeightedGC"
+    segments_seqs = get_unique_segment_seqs(base_info_df)
+    segments_base_nums = {(seg_5p, seg_3p): np.array(list(range(seg_5p, seg_3p + 1))) for seg_5p, seg_3p in segments_seqs}
+    segments_is_gc = {(seg_5p, seg_3p): np.array([base in "GC" for base in seq]) for (seg_5p, seg_3p), seq in segments_seqs.items()}
+    for base_num in base_info_df.index:
+        seg_5p = base_info_df.loc[base_num, "Segment5'"]
+        seg_3p = base_info_df.loc[base_num, "Segment3'"]
+        is_gc = segments_is_gc[seg_5p, seg_3p]
+        seg_nums = segments_base_nums[seg_5p, seg_3p]
+        weights = list(map(weight_func, seg_nums - base_num))
+        weight_sum = sum(weights)
+        if weight_sum <= 0:
+            raise ValueError("weight_sum must be positive.")
+        weighted_gc = np.dot(weights, is_gc) / weight_sum
+        weighted_gcs[base_num] = weighted_gc
+    return weighted_gcs
+
+
+def get_feature_type(full_feature):
+    strand, feature_type, direction = full_feature.split("_")
+    return feature_type
+
+
+def add_feature_side(feature, side):
+    if str(side) not in ["5", "3"]:
+        raise ValueError(side)
+    return f"{feature}_at_{side}_end"
+
+
+def get_sided_features(base_info_df):
+    features = sorted({get_feature_type(feature) for feature in base_info_df["Feature"] if not any((term in feature for term in (terms.MIDDLE, terms.SCAF_TM)))})
+    sided_features = [add_feature_side(feature, side) for feature in features for side in ["5", "3"]]
+    return sided_features
+
+
+def get_coeffs_matrix(base_info_df, funcs):
+    dist_5p, dist_3p = get_segment_end_dists(base_info_df)
+    features = get_sided_features(base_info_df)
+    coeffs = pd.DataFrame(index=base_info_df.index, columns=features)
+    for base_num in base_info_df.index:
+        feature_5p = add_feature_side(base_info_df.loc[base_num, "Segment5'Feature"], 5)
+        if feature_5p in features:
+            coeff_5p = funcs[feature_5p](dist_5p.loc[base_num])
+            coeffs.loc[base_num, feature_5p] = coeff_5p
+        feature_3p = add_feature_side(base_info_df.loc[base_num, "Segment3'Feature"], 3)
+        if feature_3p in features:
+            coeff_3p = funcs[feature_3p](dist_3p.loc[base_num])
+            coeffs.loc[base_num, feature_3p] = coeff_3p
+    coeffs.fillna(0, inplace=True)
+    return coeffs
+

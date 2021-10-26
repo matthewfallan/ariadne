@@ -64,13 +64,17 @@ def annotate_bases(vis_file, version):
                         raise ValueError()
                 elif version == 2:
                     if topo1 == ">>|>":
+                        assert topo2 == ">|>>"
                         annot1 = terms.SCAF_XO, 5  # lies just 5' of scaffold crossover
-                    if topo2 == ">|>>":
                         annot2 = terms.SCAF_XO, 3  # lies just 3' of scaffold crossover
-                    if topo1 == "<<|<":
+                    elif topo2 == ">|>>":
+                        raise ValueError()
+                    elif topo1 == "<<|<":
+                        assert topo2 == "<|<<"
                         annot1 = terms.SCAF_XO, 3  # lies just 3' of scaffold crossover
-                    if topo2 == "<|<<":
                         annot2 = terms.SCAF_XO, 5  # lies just 5' of scaffold crossover
+                    elif topo2 == "<|<<":
+                        raise ValueError()
                 else:
                     raise ValueError(version)
                 if not (annot1 and annot2):
