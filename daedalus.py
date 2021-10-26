@@ -111,8 +111,9 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
                                           base_annotations_cando.get((terms.STAP, terms.XO_2, rev, False), set()))                              
                                                                      
             print(scaf_xovers_scaf_nums_vis)
-            print(all_xovers_scaf_nums_cando)
-            print(scaf_xovers_scaf_nums_vis - all_xovers_scaf_nums_cando)
+            print(all_1xovers_scaf_nums_cando)
+            print(all_2xovers_scaf_nums_cando)
+            print(scaf_xovers_scaf_nums_vis - all_1xovers_scaf_nums_cando - all_2xovers_scaf_nums_cando)
             assert not scaf_xovers_scaf_nums_vis - all_1xovers_scaf_nums_cando - all_2xovers_scaf_nums_cando
             assert not scaf_xovers_stap_nums_vis - all_1xovers_stap_nums_cando - all_2xovers_stap_nums_cando
             base_annotations[terms.SCAF, terms.SCAF_XO, fwd] = scaf_xovers_scaf_nums_vis
@@ -222,10 +223,12 @@ def walk_segment_one_way(base_info_df, g_up, g_dn, walk_direction, base_num_star
                     (terms.STAP_TM == feature and direction == seq_utils.switch_direction(walk_direction))))
             is_stap_terminus = (strand == terms.STAP and (
                     (terms.STAP_TM == feature and direction == walk_direction) or
+                    (terms.STAP_TM_XO == feature and direction == walk_direction) or
                     (terms.SCAF_TM == feature and direction == seq_utils.switch_direction(walk_direction))))
             is_edge_terminus = terms.EDGE_TM == feature and direction == walk_direction
-            is_crossover = terms.XO in feature and direction == seq_utils.switch_direction(walk_direction)
-            is_segment_end = is_scaf_terminus or is_stap_terminus or is_edge_terminus or is_crossover
+            is_singlecrossover = terms.XO_1 in feature and direction == seq_utils.switch_direction(walk_direction)
+            is_doublecrossover = terms.XO_2 in feature and direction == seq_utils.switch_direction(walk_direction)
+            is_segment_end = is_scaf_terminus or is_stap_terminus or is_edge_terminus or is_singlecrossover or is_doublecrossover
         if not is_segment_end:
             if walk_direction == "5":
                 current_base = g_up.get(current_base)

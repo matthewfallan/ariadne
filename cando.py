@@ -336,7 +336,8 @@ def get_base_nums_by_annotations(base_annotations, strands=None, features=None, 
     """
     # Assign defaults to missing values.
     strands = [terms.SCAF, terms.STAP] if strands is None else strands
-    features = [terms.XO, terms.EDGE_TM, terms.MIDDLE, terms.TM, terms.VERTEX] if features is None else features
+    features = [terms.XO_1, terms.XO_2, terms.EDGE_TM, terms.MIDDLE, terms.TM,
+                terms.TM_XO, terms.VERTEX] if features is None else features
     directions = [5, 3] if directions is None else directions
     opposites = [True, False] if opposites is None else opposites
     # Retrieve base numbers matching the annotations.
@@ -347,7 +348,8 @@ def get_base_nums_by_annotations(base_annotations, strands=None, features=None, 
 def get_staples_bases_nums(base_annotations_groups: Dict[int, List[int]], g_dn):
     """ Get the residue numbers (according to CanDo numbering) in all of the staples """
     # Find all of the 5' termini of staples.
-    termini_5p = base_annotations_groups[terms.STAP, terms.STAP_TM, 5]
+    termini_5p = set(base_annotations_groups[terms.STAP, terms.STAP_TM, 5] |
+                base_annotations_groups[terms.STAP, terms.STAP_TM_XO, 5])
     staples_bases_nums = list()
     for terminus_5p in termini_5p:
         # Each terminus corresponds to one staple.

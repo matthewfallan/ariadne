@@ -122,8 +122,3 @@ def annotate_bases(vis_file, version):
                    key=lambda x: min(map(min, x)))
     # Convert to dict.
     return dict(base_annotations), edges
-
-# print('done')
-
-# annotate_bases('C://Users//parso//Documents//GitHub//ariadne//test//LibFig_rT66_v1//seq_01_tetrahedron_66_scaf_full_M13_singleXOVs_2019-08-19.txt',1)
-# annotate_bases('C:\\Users\\parso\\Documents\\GitHub\\ariadne\\test\\rO44_m13_v2\seq_03_octahedron_44_scaf_rO44_m13_v2_singleXOVs_2020-06-23.txt',2)
