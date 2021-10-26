@@ -196,19 +196,39 @@ def annotate_base(base_num: int,
     if base_num == uxux == xuxu == dxdx == xdxd:
         feature, direction, opposite = terms.MIDDLE, 0, False
     elif uxux == xdxd == base_num and xuxu == dxdx and xuxu is not None:
-        feature, direction, opposite = terms.XO, 5, False
+        feature, direction, opposite = terms.XO_2, 5, False
     elif xuxu == dxdx == base_num and uxux == xdxd and uxux is not None:
-        feature, direction, opposite = terms.XO, 3, False
+        feature, direction, opposite = terms.XO_2, 3, False
     elif comp_num is None:  # x
         strand, feature, direction, opposite = terms.STAP, terms.VERTEX, 0, False
     elif g_up[base_num] is None:  # u
-        feature, direction, opposite = terms.TM, 5, False
+        if xdxd is None:
+            # 5' terminus is at nick
+            feature, direction, opposite = terms.TM, 5, False
+        else: 
+            # 5' terminus is adjacent to single crossover
+            feature, direction, opposite = terms.TM_XO, 5, False
     elif g_dn[base_num] is None:  # d
-        feature, direction, opposite = terms.TM, 3, False
+        if xuxu is None:
+            # 3' terminus is at nick
+            feature, direction, opposite = terms.TM, 3, False
+        else:
+            # 3' terminus is adjacent to single crossover
+            feature, direction, opposite = terms.TM_XO, 3, False
     elif g_up[comp_num] is None:  # xu
-        feature, direction, opposite = terms.TM, 5, True
+        if g_dn[g_ax[g_dn[base_num]]] is None: # dxd
+            # complementary to 5' terminus at nick
+            feature, direction, opposite = terms.TM, 5, True
+        else:
+            # complementary to 5' terminus adjacent to single crossover
+            feature, direction, opposite = terms.TM_XO, 5, True
     elif g_dn[comp_num] is None:  # xd
-        feature, direction, opposite = terms.TM, 3, True
+        if g_up[g_ax[g_up[base_num]]] is None: # uxu
+            # complementary to 3' terminus is at nick
+            feature, direction, opposite = terms.TM, 3, True
+        else:
+            # complementary to 3' terminus adjacent to single crossover
+            feature, direction, opposite = terms.TM_XO, 3, True
     elif g_ax[g_up[base_num]] is None:  # ux
         assert strand == terms.STAP
         feature, direction, opposite = terms.EDGE_TM, 5, False
@@ -226,25 +246,25 @@ def annotate_base(base_num: int,
         # thus its partner must be a 3' terminus or 5' crossover
         # its partner cannot be a 3' terminus b/c then g_dn[comp_num] is None
         # thus its partner must be a 5' crossover
-        feature, direction, opposite = terms.XO, 5, True
+        feature, direction, opposite = terms.XO_1, 5, True
     elif g_dn[g_ax[g_dn[base_num]]] is None:  # dxd
         # the base lies diagonal to a 3' terminus
         # thus its partner must be a 5' terminus or 3' crossover
         # its partner cannot be a 5' terminus or else g_dn[comp_num] is None
         # thus its partner must be a 3' crossover
-        feature, direction, opposite = terms.XO, 3, True
+        feature, direction, opposite = terms.XO_1, 3, True
     elif xuxu is None:  # xuxu
         # the base lies immediately 5' of a 5' terminus
         # thus the base must be a 3' terminus or a 5' crossover
         # it cannot be a 3' terminus or else g_dn[base_num] is None
         # thus the base must be a 5' crossover
-        feature, direction, opposite = terms.XO, 5, False
+        feature, direction, opposite = terms.XO_1, 5, False
     elif xdxd is None:  # xdxd
         # the base lies immediately 3' of a 3' terminus
         # thus the base must be a 5' terminus or a 3' crossover
         # it cannot be a 5' terminus or else g_up[base_num] is None
         # thus the base must be a 3' crossover
-        feature, direction, opposite = terms.XO, 3, False
+        feature, direction, opposite = terms.XO_1, 3, False
     elif uxux is None:  # uxux
         # g_up[g_ax[g_up[base_num]]] must be a vertex base
         # thus g_up[base_num] must be the 3' end of an edge on the scaffold strand

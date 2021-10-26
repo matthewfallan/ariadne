@@ -52,14 +52,30 @@ def annotate_bases(vis_file, version):
                 if version == 1:
                     if topo1 == "| +>":
                         assert topo2 == ">+ |"
-                        annot1 = terms.STAP_XO, 5  # lies just 5' of scaffold crossover
-                        annot2 = terms.STAP_XO, 3  # lies just 3' of scaffold crossover
+                        if block_lines[i_line][9:13] == "| . ": 
+                            # next nucleotide is staple end, not staple crossover
+                            # block_lines[i_line] is the next line, because i_line = 1 for block_lines[0] 
+                            annot1 = terms.STAP_XO_1, 5  # lies just 5' of staple crossover (single; mesojeunction)
+                            annot2 = terms.STAP_XO_1, 3  # lies just 3' of staple crossover (single; mesojunction)
+                        elif block_lines[i_line][9:13] == "| +<": # next nucleotide is an adjacent staple crossover
+                            # next nucleotide is staple end, not staple crossover
+                            # block_lines[i_line] is the next line, because i_line = 1 for block_lines[0]    
+                            annot1 = terms.STAP_XO_2, 5  # lies just 5' of staple crossover (double; classic junction)
+                            annot2 = terms.STAP_XO_2, 3  # lies just 3' of staple crossover (double; classic junction)
                     elif topo2 == ">+ |":
                         raise ValueError()
                     elif topo1 == "| +<":
                         assert topo2 == "<+ |"
-                        annot1 = terms.STAP_XO, 3  # lies just 3' of scaffold crossover
-                        annot2 = terms.STAP_XO, 5  # lies just 5' of scaffold crossover
+                        if block_lines[i_line-2][9:13] == "| v ": # previous nucleotide is a staple end, not staple xover
+                            # next nucleotide is staple end, not staple crossover
+                            # block_lines[i_line-2] is the previous line, because i_line = 1 for block_lines[0]                            annot1 = terms.STAP_XO_1, 3  # lies just 3' of staple crossover (single; mesojeunction)
+                            annot1 = terms.STAP_XO_1, 3  # lies just 3' of staple crossover (single; mesojunction)
+                            annot2 = terms.STAP_XO_1, 5  # lies just 5' of staple crossover (single; mesojeunction)
+                        elif block_lines[i_line-2][9:13] == "| +>": # previous nucleotide is an adjacent staple crossover
+                            # next nucleotide is staple end, not staple crossover
+                            # block_lines[i_line-2] is the previous line, because i_line = 1 for block_lines[0]                            annot1 = terms.STAP_XO_2, 3  # lies just 3' of staple crossover (double; classic junction)
+                            annot1 = terms.STAP_XO_2, 3  # lies just 3' of staple crossover (double; classic junction)
+                            annot2 = terms.STAP_XO_2, 5  # lies just 5' of staple crossover (double; classic junction)
                     elif topo2 == "<+ |":
                         raise ValueError()
                 elif version == 2:
@@ -77,9 +93,9 @@ def annotate_bases(vis_file, version):
                     if topo1 == "| | ":
                         annot1 = terms.MIDDLE  # normal helix
                     elif topo1 == "| . ":
-                        annot1 = terms.STAP_TM, 5  # 5' terminus of staple
+                        annot1 = terms.STAP_TM, 5  # 5' terminus of staple (not adjacent to single xover)
                     elif topo1 == "| v ":
-                        annot1 = terms.STAP_TM, 3  # 3' terminus of staple
+                        annot1 = terms.STAP_TM, 3 # 3' terminus of staple (not adjacent to single xover)
                     elif topo1 == ". | ":
                         annot1 = terms.SCAF_TM, 3  # 5' terminus of scaffold
                     elif topo1 == "^ | ":
@@ -87,9 +103,9 @@ def annotate_bases(vis_file, version):
                     if topo2 == " | |":
                         annot2 = terms.MIDDLE  # normal helix
                     elif topo2 == " . |":
-                        annot2 = terms.STAP_TM, 5  # 5' terminus of staple
+                        annot2 = terms.STAP_TM, 5  # 5' terminus of staple (not adjacent to single xover)
                     elif topo2 == " ^ |":
-                        annot2 = terms.STAP_TM, 3  # 3' terminus of staple
+                        annot2 = terms.STAP_TM, 3  # 3' terminus of staple (not adjacent to single xover)
                     elif topo2 == " | .":
                         annot2 = terms.SCAF_TM, 5  # 5' terminus of scaffold
                     elif topo2 == " | v":
@@ -106,3 +122,8 @@ def annotate_bases(vis_file, version):
                    key=lambda x: min(map(min, x)))
     # Convert to dict.
     return dict(base_annotations), edges
+
+# print('done')
+
+# annotate_bases('C://Users//parso//Documents//GitHub//ariadne//test//LibFig_rT66_v1//seq_01_tetrahedron_66_scaf_full_M13_singleXOVs_2019-08-19.txt',1)
+# annotate_bases('C:\\Users\\parso\\Documents\\GitHub\\ariadne\\test\\rO44_m13_v2\seq_03_octahedron_44_scaf_rO44_m13_v2_singleXOVs_2020-06-23.txt',2)

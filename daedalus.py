@@ -78,34 +78,49 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
     for fwd, rev in zip([5, 3], [3, 5]):
         # crossovers
         if version == 1:
-            stap_xovers_scaf_nums_vis = base_annotations_vis.get((terms.STAP_XO, rev), set())
-            stap_xovers_stap_nums_vis = cando.switch_strand(stap_xovers_scaf_nums_vis, g_ax)
-            all_xovers_scaf_nums_cando = (base_annotations_cando.get((terms.SCAF, terms.XO, rev, True), set()) |
-                                          base_annotations_cando.get((terms.SCAF, terms.XO, fwd, False), set()))
-            all_xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO, fwd, True), set()) |
-                                          base_annotations_cando.get((terms.STAP, terms.XO, rev, False), set()))
-            assert not stap_xovers_scaf_nums_vis - all_xovers_scaf_nums_cando
-            assert not stap_xovers_stap_nums_vis - all_xovers_stap_nums_cando
-            base_annotations[terms.SCAF, terms.SCAF_XO, fwd] = all_xovers_scaf_nums_cando - stap_xovers_scaf_nums_vis
-            base_annotations[terms.SCAF, terms.STAP_XO, fwd] = stap_xovers_scaf_nums_vis
-            base_annotations[terms.STAP, terms.SCAF_XO, rev] = all_xovers_stap_nums_cando - stap_xovers_stap_nums_vis
-            base_annotations[terms.STAP, terms.STAP_XO, rev] = stap_xovers_stap_nums_vis
+            stap_1xovers_scaf_nums_vis = base_annotations_vis.get((terms.STAP_XO_1, rev), set())
+            stap_1xovers_stap_nums_vis = cando.switch_strand(stap_1xovers_scaf_nums_vis, g_ax)
+            stap_2xovers_scaf_nums_vis = base_annotations_vis.get((terms.STAP_XO_2, rev), set())
+            stap_2xovers_stap_nums_vis = cando.switch_strand(stap_2xovers_scaf_nums_vis, g_ax)
+            all_xovers_scaf_nums_cando = (base_annotations_cando.get((terms.SCAF, terms.XO_1, rev, True), set()) |
+                                          base_annotations_cando.get((terms.SCAF, terms.XO_1, fwd, False), set()) |
+                                          base_annotations_cando.get((terms.SCAF, terms.XO_2, rev, True), set()) |
+                                          base_annotations_cando.get((terms.SCAF, terms.XO_2, fwd, False), set()))
+            all_xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO_1, fwd, True), set()) |
+                                          base_annotations_cando.get((terms.STAP, terms.XO_1, rev, False), set()) |
+                                          base_annotations_cando.get((terms.STAP, terms.XO_2, fwd, True), set()) |
+                                          base_annotations_cando.get((terms.STAP, terms.XO_2, rev, False), set()))
+            assert not (stap_1xovers_scaf_nums_vis | stap_2xovers_scaf_nums_vis) - all_xovers_scaf_nums_cando
+            assert not (stap_1xovers_stap_nums_vis | stap_2xovers_stap_nums_vis) - all_xovers_stap_nums_cando
+            base_annotations[terms.SCAF, terms.SCAF_XO, fwd] = all_xovers_scaf_nums_cando - stap_1xovers_scaf_nums_vis - stap_2xovers_scaf_nums_vis
+            base_annotations[terms.SCAF, terms.STAP_XO_1, fwd] = stap_1xovers_scaf_nums_vis
+            base_annotations[terms.SCAF, terms.STAP_XO_2, fwd] = stap_2xovers_scaf_nums_vis
+            base_annotations[terms.STAP, terms.SCAF_XO, rev] = all_xovers_stap_nums_cando - stap_1xovers_stap_nums_vis - stap_2xovers_stap_nums_vis
+            base_annotations[terms.STAP, terms.STAP_XO_1, rev] = stap_1xovers_stap_nums_vis
+            base_annotations[terms.STAP, terms.STAP_XO_2, rev] = stap_2xovers_stap_nums_vis
         elif version == 2:
             scaf_xovers_scaf_nums_vis = base_annotations_vis.get((terms.SCAF_XO, fwd), set())
             scaf_xovers_stap_nums_vis = cando.switch_strand(scaf_xovers_scaf_nums_vis, g_ax)
-            all_xovers_scaf_nums_cando = (base_annotations_cando.get((terms.SCAF, terms.XO, rev, True), set()) |
-                                          base_annotations_cando.get((terms.SCAF, terms.XO, fwd, False), set()))
-            all_xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO, fwd, True), set()) |
-                                          base_annotations_cando.get((terms.STAP, terms.XO, rev, False), set()))
+            all_1xovers_scaf_nums_cando = (base_annotations_cando.get((terms.SCAF, terms.XO_1, rev, True), set()) |
+                                          base_annotations_cando.get((terms.SCAF, terms.XO_1, fwd, False), set()))
+            all_1xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO_1, fwd, True), set()) |
+                                          base_annotations_cando.get((terms.STAP, terms.XO_1, rev, False), set()))
+            all_2xovers_scaf_nums_cando = (base_annotations_cando.get((terms.SCAF, terms.XO_2, rev, True), set()) |
+                                          base_annotations_cando.get((terms.SCAF, terms.XO_2, fwd, False), set()))
+            all_2xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO_2, fwd, True), set()) |
+                                          base_annotations_cando.get((terms.STAP, terms.XO_2, rev, False), set()))                              
+                                                                     
             print(scaf_xovers_scaf_nums_vis)
             print(all_xovers_scaf_nums_cando)
             print(scaf_xovers_scaf_nums_vis - all_xovers_scaf_nums_cando)
-            assert not scaf_xovers_scaf_nums_vis - all_xovers_scaf_nums_cando
-            assert not scaf_xovers_stap_nums_vis - all_xovers_stap_nums_cando
+            assert not scaf_xovers_scaf_nums_vis - all_1xovers_scaf_nums_cando - all_2xovers_scaf_nums_cando
+            assert not scaf_xovers_stap_nums_vis - all_1xovers_stap_nums_cando - all_2xovers_stap_nums_cando
             base_annotations[terms.SCAF, terms.SCAF_XO, fwd] = scaf_xovers_scaf_nums_vis
-            base_annotations[terms.SCAF, terms.STAP_XO, fwd] = all_xovers_scaf_nums_cando - scaf_xovers_scaf_nums_vis
+            base_annotations[terms.SCAF, terms.STAP_XO_1, fwd] = all_1xovers_scaf_nums_cando 
+            base_annotations[terms.SCAF, terms.STAP_XO_2, fwd] = all_2xovers_scaf_nums_cando - scaf_xovers_scaf_nums_vis
             base_annotations[terms.STAP, terms.SCAF_XO, rev] = scaf_xovers_stap_nums_vis
-            base_annotations[terms.STAP, terms.STAP_XO, rev] = all_xovers_stap_nums_cando - scaf_xovers_stap_nums_vis
+            base_annotations[terms.STAP, terms.STAP_XO_1, rev] = all_1xovers_stap_nums_cando
+            base_annotations[terms.STAP, terms.STAP_XO_2, rev] = all_2xovers_stap_nums_cando - scaf_xovers_stap_nums_vis
         else:
             raise ValueError(version)
         # strand termini
@@ -117,14 +132,23 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
         scaf_term_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.TM, fwd, True), set())
         stap_term_scaf_nums_cando = base_annotations_cando.get((terms.SCAF, terms.TM, fwd, True), set())
         stap_term_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.TM, fwd, False), set())
+        
+        # strand termini adjacent to single crossovers -- only defined from cando parser
+        stap_termXO_scaf_nums_cando = base_annotations_cando.get((terms.SCAF, terms.TM_XO, fwd, True), set())
+        stap_termXO_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.TM_XO, fwd, False), set())      
+        
+        
         assert scaf_term_scaf_nums_vis == scaf_term_scaf_nums_cando
         assert scaf_term_stap_nums_vis == scaf_term_stap_nums_cando
-        assert stap_term_scaf_nums_vis == stap_term_scaf_nums_cando
-        assert stap_term_stap_nums_vis == stap_term_stap_nums_cando
+#        assert stap_term_scaf_nums_vis == stap_term_scaf_nums_cando
+#        assert stap_term_stap_nums_vis == stap_term_stap_nums_cando
         base_annotations[terms.SCAF, terms.SCAF_TM, fwd] = scaf_term_scaf_nums_vis
-        base_annotations[terms.SCAF, terms.STAP_TM, fwd] = stap_term_scaf_nums_vis
+        base_annotations[terms.SCAF, terms.STAP_TM, fwd] = stap_term_scaf_nums_cando
+        base_annotations[terms.SCAF, terms.STAP_TM_XO, fwd] = stap_termXO_scaf_nums_cando
         base_annotations[terms.STAP, terms.SCAF_TM, fwd] = scaf_term_stap_nums_vis
-        base_annotations[terms.STAP, terms.STAP_TM, fwd] = stap_term_stap_nums_vis
+        base_annotations[terms.STAP, terms.STAP_TM, fwd] = stap_term_stap_nums_cando
+        base_annotations[terms.STAP, terms.STAP_TM_XO, fwd] = stap_termXO_stap_nums_cando
+        
         # edge ends
         edge_end_scaf_nums_vis = base_annotations_vis.get((terms.EDGE_TM, fwd), set())
         edge_end_stap_nums_vis = cando.switch_strand(edge_end_scaf_nums_vis, g_ax)
