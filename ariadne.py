@@ -129,4 +129,4 @@ if __name__ == "__main__":
             "/Users/mfa/db/LCBB_Matthew_Molly/1_RNAorigami_design/DAEDALUSX_v2_outputs/rPB66_v2",
             "/Users/mfa/db/LCBB_Matthew_Molly/1_RNAorigami_design/DAEDALUSX_v2_outputs/rOct66_v2",
         ]
-#    analyze_designs(designs_directories)
+    analyze_designs(designs_directories)

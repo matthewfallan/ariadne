@@ -210,6 +210,7 @@ def walk_segment(base_info_df, g_up, g_dn, base_num_start):
 
 
 def walk_segment_one_way(base_info_df, g_up, g_dn, walk_direction, base_num_start):
+    opp_direction = seq_utils.switch_direction(walk_direction)
     base_nums = list()
     current_base = base_num_start
     strand, feature, direction = base_info_df.loc[current_base, "Feature"].split("_")
@@ -218,17 +219,23 @@ def walk_segment_one_way(base_info_df, g_up, g_dn, walk_direction, base_num_star
     while not is_segment_end:
         base_nums.append(current_base)
         if not vertex:
-            is_scaf_terminus = (strand == terms.SCAF and (
-                    (terms.SCAF_TM == feature and direction == walk_direction) or
-                    (terms.STAP_TM == feature and direction == seq_utils.switch_direction(walk_direction))))
-            is_stap_terminus = (strand == terms.STAP and (
-                    (terms.STAP_TM == feature and direction == walk_direction) or
-                    (terms.STAP_TM_XO == feature and direction == walk_direction) or
-                    (terms.SCAF_TM == feature and direction == seq_utils.switch_direction(walk_direction))))
-            is_edge_terminus = terms.EDGE_TM == feature and direction == walk_direction
-            is_singlecrossover = terms.XO_1 in feature and direction == seq_utils.switch_direction(walk_direction)
-            is_doublecrossover = terms.XO_2 in feature and direction == seq_utils.switch_direction(walk_direction)
-            is_segment_end = is_scaf_terminus or is_stap_terminus or is_edge_terminus or is_singlecrossover or is_doublecrossover
+            is_edge_term = feature == terms.EDGE_TM and direction == walk_direction
+            is_scaf_term = feature == terms.SCAF_TM and (
+                    (strand == terms.SCAF and direction == walk_direction) or
+                    (strand == terms.STAP and direction == opp_direction))
+            is_stap_term = feature in [terms.STAP_TM, terms.STAP_TM_XO] and (
+                    (strand == terms.STAP and direction == walk_direction) or
+                    (strand == terms.SCAF and direction == opp_direction))
+            """
+            is_scaf_xo = feature == terms.SCAF_XO and (
+                    (strand == terms.SCAF and direction == opp_direction) or
+                    (strand == terms.STAP and direction == opp_direction))
+            is_stap_xo = feature in [terms.STAP_XO_1, terms.STAP_XO_2] and (
+                    (strand == terms.SCAF and direction == opp_direction) or
+                    (strand == terms.STAP and direction == opp_direction))
+            """
+            is_xo = feature in [terms.SCAF_XO, terms.STAP_XO_1, terms.STAP_XO_2] and direction == opp_direction
+            is_segment_end = is_edge_term or is_scaf_term or is_stap_term or is_xo
         if not is_segment_end:
             if walk_direction == "5":
                 current_base = g_up.get(current_base)
@@ -313,6 +320,8 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
         features_end_5.append(feature_end_5)
         strand, feature_end_3, direction = base_info_df.loc[segment[-1], "Feature"].split("_")
         features_end_3.append(feature_end_3)
+        seg_features = [base_info_df.loc[x, "Feature"].split("_")[1] for x in segment]
+        non_middle = [f for f in seg_features[1: -1] if f != "Middle"]
     base_info_df["Segment5'"] = segment_5ps
     base_info_df["Segment3'"] = segment_3ps
     #base_info_df["SegmentSeq"] = segment_seqs

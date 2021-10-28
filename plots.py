@@ -132,7 +132,8 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
     SCAF_XO_COLOR = "#000000"
     STAP_XO_COLOR = "#50e350"
     SCAF_XO = f"{terms.SCAF}_{terms.SCAF_XO}"
-    STAP_XO = f"{terms.SCAF}_{terms.STAP_XO}"
+    STAP_XO_1 = f"{terms.SCAF}_{terms.STAP_XO_1}"
+    STAP_XO_2 = f"{terms.SCAF}_{terms.STAP_XO_2}"
     SCAF_TM = f"{terms.SCAF}_{terms.SCAF_TM}"
     STAP_TM = f"{terms.SCAF}_{terms.STAP_TM}"
     zorder = {"feature": 1, "Base": 2, "text": 3}
@@ -167,7 +168,7 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
                         raise ValueError()
                     if x_xo is not None:
                         plt.plot([x, x_xo], [y, y_xo], c=SCAF_XO_COLOR, zorder=zorder["feature"])
-                elif loc.startswith(STAP_XO):
+                elif loc.startswith(STAP_XO_1) or loc.startswith(STAP_XO_2):
                     # staple crossovers
                     if loc.endswith("5"):
                         # x position of the base to which it is crossing over
