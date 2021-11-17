@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 import pandas as pd
 
 import seq_utils
-import terms
+from terms import *
 
 
 def get_connectivity(cando_file: str) -> Tuple[
@@ -175,14 +175,14 @@ def annotate_base(base_num: int,
     :param g_dn: map base number to number of the downstream base (or None)
     :param g_ax: map base number to number of the paired base (or None)
     :param base_num: the number of the base to classify
-    :return strand: whether base is on terms.SCAF or terms.STAP strand
-    :return feature: terms.XO (base participates in crossover or is paired to such a base
+    :return strand: whether base is on SCAF or STAP strand
+    :return feature: XO (base participates in crossover or is paired to such a base
                              note that the strand variable does NOT indicate whether
                              the crossover is a scaffold or staple crossover)
-                     terms.TM (5' or 3' terminus of a strand, or paired to such a base)
-                     terms.EDGE_TM (at the 5' or 3' end of an edge, adjacent to a vertex)
-                     terms.VERTEX (an unpaired base in a vertex; currently only applies to staple bases)
-                     terms.MIDDLE (none of the above)
+                     TM (5' or 3' terminus of a strand, or paired to such a base)
+                     EDGE_TM (at the 5' or 3' end of an edge, adjacent to a vertex)
+                     VERTEX (an unpaired base in a vertex; currently only applies to staple bases)
+                     MIDDLE (none of the above)
     :return direction: for crossover and edge-end, 5 (3) if on 5' (3') side of feature
                        for terminus, 5 (3) if at 5' (3') end of strand
                        for vertex and middle, 0
@@ -191,80 +191,80 @@ def annotate_base(base_num: int,
     assert base_num is not None
     comp_num = g_ax[base_num]
     assert comp_num != base_num
-    strand = terms.STAP if comp_num is None or base_num > comp_num else terms.SCAF
+    strand = STAP if comp_num is None or base_num > comp_num else SCAF
     uxux, xuxu, dxdx, xdxd = walk_around_the_block(base_num, g_up, g_dn, g_ax)
     if base_num == uxux == xuxu == dxdx == xdxd:
-        feature, direction, opposite = terms.MIDDLE, 0, False
+        feature, direction, opposite = MIDDLE, 0, False
     elif uxux == xdxd == base_num and xuxu == dxdx and xuxu is not None:
-        feature, direction, opposite = terms.XO_2, 5, False
+        feature, direction, opposite = XO_2, 5, False
     elif xuxu == dxdx == base_num and uxux == xdxd and uxux is not None:
-        feature, direction, opposite = terms.XO_2, 3, False
+        feature, direction, opposite = XO_2, 3, False
     elif comp_num is None:  # x
-        strand, feature, direction, opposite = terms.STAP, terms.VERTEX, 0, False
+        strand, feature, direction, opposite = STAP, IN_VERTEX, 0, False
     elif g_up[base_num] is None:  # u
         if xdxd is None:
             # 5' terminus is at nick
-            feature, direction, opposite = terms.TM, 5, False
+            feature, direction, opposite = TM5, 0, False
         else: 
             # 5' terminus is adjacent to single crossover
-            feature, direction, opposite = terms.TM_XO, 5, False
+            feature, direction, opposite = TM5_XO, 0, False
     elif g_dn[base_num] is None:  # d
         if xuxu is None:
             # 3' terminus is at nick
-            feature, direction, opposite = terms.TM, 3, False
+            feature, direction, opposite = TM3, 0, False
         else:
             # 3' terminus is adjacent to single crossover
-            feature, direction, opposite = terms.TM_XO, 3, False
+            feature, direction, opposite = TM3_XO, 0, False
     elif g_up[comp_num] is None:  # xu
         if g_dn[g_ax[g_dn[base_num]]] is None: # dxd
             # complementary to 5' terminus at nick
-            feature, direction, opposite = terms.TM, 5, True
+            feature, direction, opposite = TM5, 0, True
         else:
             # complementary to 5' terminus adjacent to single crossover
-            feature, direction, opposite = terms.TM_XO, 5, True
+            feature, direction, opposite = TM5_XO, 0, True
     elif g_dn[comp_num] is None:  # xd
         if g_up[g_ax[g_up[base_num]]] is None: # uxu
             # complementary to 3' terminus is at nick
-            feature, direction, opposite = terms.TM, 3, True
+            feature, direction, opposite = TM3, 0, True
         else:
             # complementary to 3' terminus adjacent to single crossover
-            feature, direction, opposite = terms.TM_XO, 3, True
+            feature, direction, opposite = TM3_XO, 0, True
     elif g_ax[g_up[base_num]] is None:  # ux
-        assert strand == terms.STAP
-        feature, direction, opposite = terms.EDGE_TM, 5, False
+        assert strand == STAP
+        feature, direction, opposite = VERTEX, 3, False
     elif g_ax[g_dn[base_num]] is None:  # dx
-        assert strand == terms.STAP
-        feature, direction, opposite = terms.EDGE_TM, 3, False
+        assert strand == STAP
+        feature, direction, opposite = VERTEX, 5, False
     elif g_ax[g_up[comp_num]] is None:  # xux
-        assert strand == terms.SCAF
-        feature, direction, opposite = terms.EDGE_TM, 3, False
+        assert strand == SCAF
+        feature, direction, opposite = VERTEX, 5, False
     elif g_ax[g_dn[comp_num]] is None:  # xdx
-        assert strand == terms.SCAF
-        feature, direction, opposite = terms.EDGE_TM, 5, False
+        assert strand == SCAF
+        feature, direction, opposite = VERTEX, 3, False
     elif g_up[g_ax[g_up[base_num]]] is None:  # uxu
         # the base lies diagonal to a 5' terminus
         # thus its partner must be a 3' terminus or 5' crossover
         # its partner cannot be a 3' terminus b/c then g_dn[comp_num] is None
         # thus its partner must be a 5' crossover
-        feature, direction, opposite = terms.XO_1, 5, True
+        feature, direction, opposite = XO_1, 5, True
     elif g_dn[g_ax[g_dn[base_num]]] is None:  # dxd
         # the base lies diagonal to a 3' terminus
         # thus its partner must be a 5' terminus or 3' crossover
         # its partner cannot be a 5' terminus or else g_dn[comp_num] is None
         # thus its partner must be a 3' crossover
-        feature, direction, opposite = terms.XO_1, 3, True
+        feature, direction, opposite = XO_1, 3, True
     elif xuxu is None:  # xuxu
         # the base lies immediately 5' of a 5' terminus
         # thus the base must be a 3' terminus or a 5' crossover
         # it cannot be a 3' terminus or else g_dn[base_num] is None
         # thus the base must be a 5' crossover
-        feature, direction, opposite = terms.XO_1, 5, False
+        feature, direction, opposite = XO_1, 5, False
     elif xdxd is None:  # xdxd
         # the base lies immediately 3' of a 3' terminus
         # thus the base must be a 5' terminus or a 3' crossover
         # it cannot be a 5' terminus or else g_up[base_num] is None
         # thus the base must be a 3' crossover
-        feature, direction, opposite = terms.XO_1, 3, False
+        feature, direction, opposite = XO_1, 3, False
     elif uxux is None:  # uxux
         # g_up[g_ax[g_up[base_num]]] must be a vertex base
         # thus g_up[base_num] must be the 3' end of an edge on the scaffold strand
@@ -314,7 +314,7 @@ def annotate_bases(g_up: Dict[int, Optional[int]],
             if comp in base_annotations:
                 # If the base is paired to a base that has also been annotated:
                 # Ensure that one is scaffold and the other staple.
-                assert sorted([strand, base_annotations[comp]["strand"]]) == [terms.SCAF, terms.STAP]
+                assert sorted([strand, base_annotations[comp]["strand"]]) == [SCAF, STAP]
                 # Ensure that the locations and directions match.
                 assert feature == base_annotations[comp]["location"]
                 assert direction == base_annotations[comp]["direction"]
@@ -324,6 +324,7 @@ def annotate_bases(g_up: Dict[int, Optional[int]],
     return dict(base_annotations)
 
 
+'''
 def get_base_nums_by_annotations(base_annotations, strands=None, features=None, directions=None, opposites=None):
     """
 
@@ -335,21 +336,22 @@ def get_base_nums_by_annotations(base_annotations, strands=None, features=None, 
     :return:
     """
     # Assign defaults to missing values.
-    strands = [terms.SCAF, terms.STAP] if strands is None else strands
-    features = [terms.XO_1, terms.XO_2, terms.EDGE_TM, terms.MIDDLE, terms.TM,
-                terms.TM_XO, terms.VERTEX] if features is None else features
+    strands = [SCAF, STAP] if strands is None else strands
+    features = [XO_1, XO_2, EDGE_TM, MIDDLE, TM5, TM3,
+                TM_XO, VERTEX] if features is None else features
     directions = [5, 3] if directions is None else directions
     opposites = [True, False] if opposites is None else opposites
     # Retrieve base numbers matching the annotations.
     base_nums = {base_num for annotation in itertools.product(strands, features, directions, opposites) for base_num in base_annotations[annotation]}
     return base_nums
+'''
 
 
 def get_staples_bases_nums(base_annotations_groups: Dict[int, List[int]], g_dn):
     """ Get the residue numbers (according to CanDo numbering) in all of the staples """
     # Find all of the 5' termini of staples.
-    termini_5p = set(base_annotations_groups[terms.STAP, terms.STAP_TM, 5] |
-                base_annotations_groups[terms.STAP, terms.STAP_TM_XO, 5])
+    termini_5p = set(base_annotations_groups[STAP, STAP_TM5, 0] |
+                base_annotations_groups[STAP, STAP_TM5_XO, 0])
     staples_bases_nums = list()
     for terminus_5p in termini_5p:
         # Each terminus corresponds to one staple.

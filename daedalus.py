@@ -15,7 +15,7 @@ import pandas as pd
 import cando
 import pdb_tools
 import seq_utils
-import terms
+from terms import *
 import vis
 
 
@@ -78,98 +78,111 @@ def annotate_bases(g_up, g_dn, g_ax, vis_file, version=None):
     for fwd, rev in zip([5, 3], [3, 5]):
         # crossovers
         if version == 1:
-            stap_1xovers_scaf_nums_vis = base_annotations_vis.get((terms.STAP_XO_1, rev), set())
+            stap_1xovers_scaf_nums_vis = base_annotations_vis.get((STAP_XO_1, rev), set())
             stap_1xovers_stap_nums_vis = cando.switch_strand(stap_1xovers_scaf_nums_vis, g_ax)
-            stap_2xovers_scaf_nums_vis = base_annotations_vis.get((terms.STAP_XO_2, rev), set())
+            stap_2xovers_scaf_nums_vis = base_annotations_vis.get((STAP_XO_2, rev), set())
             stap_2xovers_stap_nums_vis = cando.switch_strand(stap_2xovers_scaf_nums_vis, g_ax)
-            all_xovers_scaf_nums_cando = (base_annotations_cando.get((terms.SCAF, terms.XO_1, rev, True), set()) |
-                                          base_annotations_cando.get((terms.SCAF, terms.XO_1, fwd, False), set()) |
-                                          base_annotations_cando.get((terms.SCAF, terms.XO_2, rev, True), set()) |
-                                          base_annotations_cando.get((terms.SCAF, terms.XO_2, fwd, False), set()))
-            all_xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO_1, fwd, True), set()) |
-                                          base_annotations_cando.get((terms.STAP, terms.XO_1, rev, False), set()) |
-                                          base_annotations_cando.get((terms.STAP, terms.XO_2, fwd, True), set()) |
-                                          base_annotations_cando.get((terms.STAP, terms.XO_2, rev, False), set()))
+            all_xovers_scaf_nums_cando = (base_annotations_cando.get((SCAF, XO_1, rev, True), set()) |
+                                          base_annotations_cando.get((SCAF, XO_1, fwd, False), set()) |
+                                          base_annotations_cando.get((SCAF, XO_2, rev, True), set()) |
+                                          base_annotations_cando.get((SCAF, XO_2, fwd, False), set()))
+            all_xovers_stap_nums_cando = (base_annotations_cando.get((STAP, XO_1, fwd, True), set()) |
+                                          base_annotations_cando.get((STAP, XO_1, rev, False), set()) |
+                                          base_annotations_cando.get((STAP, XO_2, fwd, True), set()) |
+                                          base_annotations_cando.get((STAP, XO_2, rev, False), set()))
             assert not (stap_1xovers_scaf_nums_vis | stap_2xovers_scaf_nums_vis) - all_xovers_scaf_nums_cando
             assert not (stap_1xovers_stap_nums_vis | stap_2xovers_stap_nums_vis) - all_xovers_stap_nums_cando
-            base_annotations[terms.SCAF, terms.SCAF_XO, fwd] = all_xovers_scaf_nums_cando - stap_1xovers_scaf_nums_vis - stap_2xovers_scaf_nums_vis
-            base_annotations[terms.SCAF, terms.STAP_XO_1, fwd] = stap_1xovers_scaf_nums_vis
-            base_annotations[terms.SCAF, terms.STAP_XO_2, fwd] = stap_2xovers_scaf_nums_vis
-            base_annotations[terms.STAP, terms.SCAF_XO, rev] = all_xovers_stap_nums_cando - stap_1xovers_stap_nums_vis - stap_2xovers_stap_nums_vis
-            base_annotations[terms.STAP, terms.STAP_XO_1, rev] = stap_1xovers_stap_nums_vis
-            base_annotations[terms.STAP, terms.STAP_XO_2, rev] = stap_2xovers_stap_nums_vis
+            base_annotations[SCAF, SCAF_XO, fwd] = all_xovers_scaf_nums_cando - stap_1xovers_scaf_nums_vis - stap_2xovers_scaf_nums_vis
+            base_annotations[SCAF, STAP_XO_1, fwd] = stap_1xovers_scaf_nums_vis
+            base_annotations[SCAF, STAP_XO_2, fwd] = stap_2xovers_scaf_nums_vis
+            base_annotations[STAP, SCAF_XO, rev] = all_xovers_stap_nums_cando - stap_1xovers_stap_nums_vis - stap_2xovers_stap_nums_vis
+            base_annotations[STAP, STAP_XO_1, rev] = stap_1xovers_stap_nums_vis
+            base_annotations[STAP, STAP_XO_2, rev] = stap_2xovers_stap_nums_vis
         elif version == 2:
-            scaf_xovers_scaf_nums_vis = base_annotations_vis.get((terms.SCAF_XO, fwd), set())
+            scaf_xovers_scaf_nums_vis = base_annotations_vis.get((SCAF_XO, fwd), set())
             scaf_xovers_stap_nums_vis = cando.switch_strand(scaf_xovers_scaf_nums_vis, g_ax)
-            all_1xovers_scaf_nums_cando = (base_annotations_cando.get((terms.SCAF, terms.XO_1, rev, True), set()) |
-                                          base_annotations_cando.get((terms.SCAF, terms.XO_1, fwd, False), set()))
-            all_1xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO_1, fwd, True), set()) |
-                                          base_annotations_cando.get((terms.STAP, terms.XO_1, rev, False), set()))
-            all_2xovers_scaf_nums_cando = (base_annotations_cando.get((terms.SCAF, terms.XO_2, rev, True), set()) |
-                                          base_annotations_cando.get((terms.SCAF, terms.XO_2, fwd, False), set()))
-            all_2xovers_stap_nums_cando = (base_annotations_cando.get((terms.STAP, terms.XO_2, fwd, True), set()) |
-                                          base_annotations_cando.get((terms.STAP, terms.XO_2, rev, False), set()))                              
-                                                                     
-            print(scaf_xovers_scaf_nums_vis)
-            print(all_1xovers_scaf_nums_cando)
-            print(all_2xovers_scaf_nums_cando)
-            print(scaf_xovers_scaf_nums_vis - all_1xovers_scaf_nums_cando - all_2xovers_scaf_nums_cando)
+            all_1xovers_scaf_nums_cando = (base_annotations_cando.get((SCAF, XO_1, rev, True), set()) |
+                                          base_annotations_cando.get((SCAF, XO_1, fwd, False), set()))
+            all_1xovers_stap_nums_cando = (base_annotations_cando.get((STAP, XO_1, fwd, True), set()) |
+                                          base_annotations_cando.get((STAP, XO_1, rev, False), set()))
+            all_2xovers_scaf_nums_cando = (base_annotations_cando.get((SCAF, XO_2, rev, True), set()) |
+                                          base_annotations_cando.get((SCAF, XO_2, fwd, False), set()))
+            all_2xovers_stap_nums_cando = (base_annotations_cando.get((STAP, XO_2, fwd, True), set()) |
+                                          base_annotations_cando.get((STAP, XO_2, rev, False), set()))                              
             assert not scaf_xovers_scaf_nums_vis - all_1xovers_scaf_nums_cando - all_2xovers_scaf_nums_cando
             assert not scaf_xovers_stap_nums_vis - all_1xovers_stap_nums_cando - all_2xovers_stap_nums_cando
-            base_annotations[terms.SCAF, terms.SCAF_XO, fwd] = scaf_xovers_scaf_nums_vis
-            base_annotations[terms.SCAF, terms.STAP_XO_1, fwd] = all_1xovers_scaf_nums_cando 
-            base_annotations[terms.SCAF, terms.STAP_XO_2, fwd] = all_2xovers_scaf_nums_cando - scaf_xovers_scaf_nums_vis
-            base_annotations[terms.STAP, terms.SCAF_XO, rev] = scaf_xovers_stap_nums_vis
-            base_annotations[terms.STAP, terms.STAP_XO_1, rev] = all_1xovers_stap_nums_cando
-            base_annotations[terms.STAP, terms.STAP_XO_2, rev] = all_2xovers_stap_nums_cando - scaf_xovers_stap_nums_vis
+            base_annotations[SCAF, SCAF_XO, fwd] = scaf_xovers_scaf_nums_vis
+            base_annotations[SCAF, STAP_XO_1, fwd] = all_1xovers_scaf_nums_cando 
+            base_annotations[SCAF, STAP_XO_2, fwd] = all_2xovers_scaf_nums_cando - scaf_xovers_scaf_nums_vis
+            base_annotations[STAP, SCAF_XO, rev] = scaf_xovers_stap_nums_vis
+            base_annotations[STAP, STAP_XO_1, rev] = all_1xovers_stap_nums_cando
+            base_annotations[STAP, STAP_XO_2, rev] = all_2xovers_stap_nums_cando - scaf_xovers_stap_nums_vis
         else:
             raise ValueError(version)
-        # strand termini
-        scaf_term_scaf_nums_vis = base_annotations_vis.get((terms.SCAF_TM, fwd), set())
-        scaf_term_stap_nums_vis = cando.switch_strand(scaf_term_scaf_nums_vis, g_ax)
-        stap_term_scaf_nums_vis = base_annotations_vis.get((terms.STAP_TM, fwd), set())
-        stap_term_stap_nums_vis = cando.switch_strand(stap_term_scaf_nums_vis, g_ax)
-        scaf_term_scaf_nums_cando = base_annotations_cando.get((terms.SCAF, terms.TM, fwd, False), set())
-        scaf_term_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.TM, fwd, True), set())
-        stap_term_scaf_nums_cando = base_annotations_cando.get((terms.SCAF, terms.TM, fwd, True), set())
-        stap_term_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.TM, fwd, False), set())
         
-        # strand termini adjacent to single crossovers -- only defined from cando parser
-        stap_termXO_scaf_nums_cando = base_annotations_cando.get((terms.SCAF, terms.TM_XO, fwd, True), set())
-        stap_termXO_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.TM_XO, fwd, False), set())      
-        
-        
-        assert scaf_term_scaf_nums_vis == scaf_term_scaf_nums_cando
-        assert scaf_term_stap_nums_vis == scaf_term_stap_nums_cando
-#        assert stap_term_scaf_nums_vis == stap_term_scaf_nums_cando
-#        assert stap_term_stap_nums_vis == stap_term_stap_nums_cando
-        base_annotations[terms.SCAF, terms.SCAF_TM, fwd] = scaf_term_scaf_nums_vis
-        base_annotations[terms.SCAF, terms.STAP_TM, fwd] = stap_term_scaf_nums_cando
-        base_annotations[terms.SCAF, terms.STAP_TM_XO, fwd] = stap_termXO_scaf_nums_cando
-        base_annotations[terms.STAP, terms.SCAF_TM, fwd] = scaf_term_stap_nums_vis
-        base_annotations[terms.STAP, terms.STAP_TM, fwd] = stap_term_stap_nums_cando
-        base_annotations[terms.STAP, terms.STAP_TM_XO, fwd] = stap_termXO_stap_nums_cando
-        
-        # edge ends
-        edge_end_scaf_nums_vis = base_annotations_vis.get((terms.EDGE_TM, fwd), set())
-        edge_end_stap_nums_vis = cando.switch_strand(edge_end_scaf_nums_vis, g_ax)
-        edge_end_scaf_nums_cando = base_annotations_cando.get((terms.SCAF, terms.EDGE_TM, fwd, False), set())
-        edge_end_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.EDGE_TM, rev, False), set())
-        assert edge_end_scaf_nums_vis == edge_end_scaf_nums_cando
-        assert edge_end_stap_nums_vis == edge_end_stap_nums_cando
-        base_annotations[terms.SCAF, terms.EDGE_TM, fwd] = edge_end_scaf_nums_vis
-        base_annotations[terms.STAP, terms.EDGE_TM, rev] = edge_end_stap_nums_vis
+        # bases adjacent to vertices (at edge ends)
+        vertex_scaf_nums_vis = base_annotations_vis.get((VERTEX, fwd), set())
+        vertex_stap_nums_vis = cando.switch_strand(vertex_scaf_nums_vis, g_ax)
+        vertex_scaf_nums_cando = base_annotations_cando.get((SCAF, VERTEX, fwd, False), set())
+        vertex_stap_nums_cando = base_annotations_cando.get((STAP, VERTEX, rev, False), set())
+        assert vertex_scaf_nums_vis == vertex_scaf_nums_cando
+        assert vertex_stap_nums_vis == vertex_stap_nums_cando
+        base_annotations[SCAF, VERTEX, fwd] = vertex_scaf_nums_vis
+        base_annotations[STAP, VERTEX, rev] = vertex_stap_nums_vis
+    
+    # strand termini
+    scaf_term5_scaf_nums_vis = base_annotations_vis.get((SCAF_TM5, 0), set())
+    scaf_term3_scaf_nums_vis = base_annotations_vis.get((SCAF_TM3, 0), set())
+    scaf_term5_stap_nums_vis = cando.switch_strand(scaf_term5_scaf_nums_vis, g_ax)
+    scaf_term3_stap_nums_vis = cando.switch_strand(scaf_term3_scaf_nums_vis, g_ax)
+    stap_term5_scaf_nums_vis = base_annotations_vis.get((STAP_TM5, 0), set())
+    stap_term3_scaf_nums_vis = base_annotations_vis.get((STAP_TM3, 0), set())
+    stap_term5_stap_nums_vis = cando.switch_strand(stap_term5_scaf_nums_vis, g_ax)
+    stap_term3_stap_nums_vis = cando.switch_strand(stap_term3_scaf_nums_vis, g_ax)
+    scaf_term5_scaf_nums_cando = base_annotations_cando.get((SCAF, TM5, 0, False), set())
+    scaf_term3_scaf_nums_cando = base_annotations_cando.get((SCAF, TM3, 0, False), set())
+    scaf_term5_stap_nums_cando = base_annotations_cando.get((STAP, TM5, 0, True), set())
+    scaf_term3_stap_nums_cando = base_annotations_cando.get((STAP, TM3, 0, True), set())
+    stap_term5_scaf_nums_cando = base_annotations_cando.get((SCAF, TM5, 0, True), set())
+    stap_term3_scaf_nums_cando = base_annotations_cando.get((SCAF, TM3, 0, True), set())
+    stap_term5_stap_nums_cando = base_annotations_cando.get((STAP, TM5, 0, False), set())
+    stap_term3_stap_nums_cando = base_annotations_cando.get((STAP, TM3, 0, False), set())
+    assert scaf_term5_scaf_nums_vis == scaf_term5_scaf_nums_cando
+    assert scaf_term3_scaf_nums_vis == scaf_term3_scaf_nums_cando
+    assert scaf_term5_stap_nums_vis == scaf_term5_stap_nums_cando
+    assert scaf_term3_stap_nums_vis == scaf_term3_stap_nums_cando
+    base_annotations[SCAF, SCAF_TM5, 0] = scaf_term5_scaf_nums_vis
+    base_annotations[SCAF, SCAF_TM3, 0] = scaf_term3_scaf_nums_vis
+    base_annotations[SCAF, STAP_TM5, 0] = stap_term5_scaf_nums_cando
+    base_annotations[SCAF, STAP_TM3, 0] = stap_term3_scaf_nums_cando
+    base_annotations[STAP, SCAF_TM5, 0] = scaf_term5_stap_nums_vis
+    base_annotations[STAP, SCAF_TM3, 0] = scaf_term3_stap_nums_vis
+    base_annotations[STAP, STAP_TM5, 0] = stap_term5_stap_nums_cando
+    base_annotations[STAP, STAP_TM3, 0] = stap_term3_stap_nums_cando
+    
+    # strand termini adjacent to single crossovers -- only defined from cando parser
+    stap_term5XO_scaf_nums_cando = base_annotations_cando.get((SCAF, TM5_XO, 0, True), set())
+    stap_term3XO_scaf_nums_cando = base_annotations_cando.get((SCAF, TM3_XO, 0, True), set())
+    stap_term5XO_stap_nums_cando = base_annotations_cando.get((STAP, TM5_XO, 0, False), set())      
+    stap_term3XO_stap_nums_cando = base_annotations_cando.get((STAP, TM3_XO, 0, False), set())      
+    base_annotations[SCAF, STAP_TM5_XO, 0] = stap_term5XO_scaf_nums_cando
+    base_annotations[SCAF, STAP_TM3_XO, 0] = stap_term3XO_scaf_nums_cando
+    base_annotations[STAP, STAP_TM5_XO, 0] = stap_term5XO_stap_nums_cando
+    base_annotations[STAP, STAP_TM3_XO, 0] = stap_term3XO_stap_nums_cando
+    
     # mid-strand bases
-    mid_scaf_nums_vis = base_annotations_vis.get(terms.MIDDLE, set())
+    mid_scaf_nums_vis = base_annotations_vis.get(MIDDLE, set())
     mid_stap_nums_vis = cando.switch_strand(mid_scaf_nums_vis, g_ax)
-    mid_scaf_nums_cando = base_annotations_cando.get((terms.SCAF, terms.MIDDLE, 0, False), set())
-    mid_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.MIDDLE, 0, False), set())
+    mid_scaf_nums_cando = base_annotations_cando.get((SCAF, MIDDLE, 0, False), set())
+    mid_stap_nums_cando = base_annotations_cando.get((STAP, MIDDLE, 0, False), set())
+    
     # the two parsers will not agree because the vis parser can't find staple crossovers and classifies them as middle
-    base_annotations[terms.SCAF, terms.MIDDLE, 0] = mid_scaf_nums_cando
-    base_annotations[terms.STAP, terms.MIDDLE, 0] = mid_stap_nums_cando
-    # vertex bases
-    vert_stap_nums_cando = base_annotations_cando.get((terms.STAP, terms.VERTEX, 0, False), set())
-    base_annotations[terms.STAP, terms.VERTEX, 0] = vert_stap_nums_cando
+    base_annotations[SCAF, MIDDLE, 0] = mid_scaf_nums_cando
+    base_annotations[STAP, MIDDLE, 0] = mid_stap_nums_cando
+    
+    # bases in vertices
+    invertex_stap_nums_cando = base_annotations_cando.get((STAP, IN_VERTEX, 0, False), set())
+    base_annotations[STAP, IN_VERTEX, 0] = invertex_stap_nums_cando
     base_annotation_nums = sorted([base_num for annot_nums in base_annotations.values() for base_num in annot_nums])
     assert base_annotation_nums == base_nums
     return base_annotations, edges, version
@@ -206,47 +219,39 @@ def walk_segment(base_info_df, g_up, g_dn, base_num_start):
     segment_3 = walk_segment_one_way(base_info_df, g_up, g_dn, "3", base_num_start)
     assert base_num_start == segment_5[-1] == segment_3[0]
     segment = segment_5 + segment_3[1:]
+    assert segment == sorted(segment) or segment == list(reversed(sorted(segment)))
     return segment
+
+
+def get_next_base(base, g_up, g_dn, walk_direction):
+    if walk_direction == "5":
+        return g_up.get(base)
+    elif walk_direction == "3":
+        return g_dn.get(base)
+    else:
+        raise ValueError(walk_direction)
 
 
 def walk_segment_one_way(base_info_df, g_up, g_dn, walk_direction, base_num_start):
     opp_direction = seq_utils.switch_direction(walk_direction)
-    base_nums = list()
-    current_base = base_num_start
-    strand, feature, direction = base_info_df.loc[current_base, "Feature"].split("_")
-    vertex = feature == terms.VERTEX
-    is_segment_end = False
-    while not is_segment_end:
-        base_nums.append(current_base)
-        if not vertex:
-            is_edge_term = feature == terms.EDGE_TM and direction == walk_direction
-            is_scaf_term = feature == terms.SCAF_TM and (
-                    (strand == terms.SCAF and direction == walk_direction) or
-                    (strand == terms.STAP and direction == opp_direction))
-            is_stap_term = feature in [terms.STAP_TM, terms.STAP_TM_XO] and (
-                    (strand == terms.STAP and direction == walk_direction) or
-                    (strand == terms.SCAF and direction == opp_direction))
-            """
-            is_scaf_xo = feature == terms.SCAF_XO and (
-                    (strand == terms.SCAF and direction == opp_direction) or
-                    (strand == terms.STAP and direction == opp_direction))
-            is_stap_xo = feature in [terms.STAP_XO_1, terms.STAP_XO_2] and (
-                    (strand == terms.SCAF and direction == opp_direction) or
-                    (strand == terms.STAP and direction == opp_direction))
-            """
-            is_xo = feature in [terms.SCAF_XO, terms.STAP_XO_1, terms.STAP_XO_2] and direction == opp_direction
-            is_segment_end = is_edge_term or is_scaf_term or is_stap_term or is_xo
-        if not is_segment_end:
-            if walk_direction == "5":
-                current_base = g_up.get(current_base)
-            elif walk_direction == "3":
-                current_base = g_dn.get(current_base)
-            else:
-                raise ValueError(walk_direction)
-            strand, feature, direction = base_info_df.loc[current_base, "Feature"].split("_")
-        if vertex:
-            is_segment_end = feature != terms.VERTEX
-    return base_nums
+    base_nums = [base_num_start]
+    strand, feature, direction = base_info_df.loc[base_num_start, "Feature"].split("_")
+    is_vertex = feature == IN_VERTEX
+    while True:
+        base = get_next_base(base_nums[-1], g_up, g_dn, walk_direction)
+        if is_vertex:
+            strand, feature, direction = base_info_df.loc[base, "Feature"].split("_")
+            if feature != IN_VERTEX:
+                return base_nums
+        else:
+            if feature in [VERTEX, SCAF_XO, STAP_XO_1, STAP_XO_2] and direction == opp_direction:
+                return base_nums
+            if feature in [STAP_TM5, STAP_TM5_XO, SCAF_TM3] and ((strand == STAP and walk_direction == "5") or (strand == SCAF and walk_direction == "3")):
+                return base_nums
+            if feature in [STAP_TM3, STAP_TM3_XO, SCAF_TM5] and ((strand == STAP and walk_direction == "3") or (strand == SCAF and walk_direction == "5")):
+                return base_nums
+            strand, feature, direction = base_info_df.loc[base, "Feature"].split("_")
+        base_nums.append(base)
 
 
 BOND_ID_VARS = ["Design", "CanDo number", "PDB chain", "PDB number", "Base", "Feature"]
@@ -325,8 +330,8 @@ def assemble_base_info(design, model, base_annotations, cando_num_to_pdb_chain_n
     base_info_df["Segment5'"] = segment_5ps
     base_info_df["Segment3'"] = segment_3ps
     #base_info_df["SegmentSeq"] = segment_seqs
-    #base_info_df["SegmentLength"] = list(map(len, segment_seqs))
-    #assert all(base_info_df["SegmentLength"] == base_info_df["Segment3'"] - base_info_df["Segment5'"] + 1)
+    base_info_df["SegmentLength"] = list(map(len, segment_seqs))
+    assert np.all(base_info_df["SegmentLength"] == np.abs(base_info_df["Segment3'"] - base_info_df["Segment5'"]) + 1)
     #base_info_df["SegmentGC"] = list(map(seq_utils.get_gc_content, segment_seqs))
     #base_info_df["SegmentTm"] = list(map(get_melt, segment_seqs))
     base_info_df["Segment5'Feature"] = features_end_5
@@ -388,28 +393,68 @@ def get_feature_type(full_feature):
     return feature_type
 
 
-def add_feature_side(feature, side):
-    if str(side) not in ["5", "3"]:
-        raise ValueError(side)
-    return f"{feature}_at_{side}_end"
+adirectional_features = [MIDDLE]
+unidirectional_features = {"5": [STAP_TM5, STAP_TM5_XO, SCAF_TM5],
+                           "3": [STAP_TM3, STAP_TM3_XO, SCAF_TM3]}
+bidirectional_features = [SCAF_XO, STAP_XO_1, STAP_XO_2, VERTEX]
+
+def format_feature_name(feature, direction):
+    direction = str(direction)
+    if direction in ["5", "3"]:
+        direction = {"5": "before", "3": "after"}[direction]
+        return f"{direction}_{feature}"
+    elif direction in ["0"]:
+        if feature in bidirectional_features:
+            raise ValueError(f"{feature} with direction {direction}")
+        for direction in ["5", "3"]:
+            if feature in unidirectional_features[direction]:
+                return format_feature_name(feature, direction)
+        if feature in adirectional_features:
+            return feature
+        else:
+            raise ValueError(feature)
+    else:
+        raise ValueError(direction)
 
 
-def get_sided_features(base_info_df):
-    features = sorted({get_feature_type(feature) for feature in base_info_df["Feature"] if not any((term in feature for term in (terms.MIDDLE, terms.SCAF_TM)))})
-    sided_features = [add_feature_side(feature, side) for feature in features for side in ["5", "3"]]
-    return sided_features
+features_order = [SCAF_XO, STAP_XO_1, STAP_XO_2, VERTEX, STAP_TM5, STAP_TM3, STAP_TM5_XO, STAP_TM3_XO]
+
+def get_formatted_features(base_info_df):
+    base_info_features = set(base_info_df["Feature"])
+    formatted_features = list()
+    for feature in features_order:
+        if feature in bidirectional_features:
+            directions = ["5", "3"]
+        elif feature in unidirectional_features["5"]:
+            directions = ["5"]
+        elif feature in unidirectional_features["3"]:
+            directions = ["3"]
+        elif feature in adirectional_features:
+            continue
+        else:
+            raise ValueError("{feature} not found")
+        for direction in directions:
+            feature_label = f"{SCAF}_{feature}"
+            if any((x.startswith(feature_label) for x in base_info_features)):
+                formatted_features.append(format_feature_name(feature, direction))
+    return formatted_features
 
 
 def get_coeffs_matrix(base_info_df, funcs):
     dist_5p, dist_3p = get_segment_end_dists(base_info_df)
-    features = get_sided_features(base_info_df)
+    features = get_formatted_features(base_info_df)
     coeffs = pd.DataFrame(index=base_info_df.index, columns=features)
     for base_num in base_info_df.index:
-        feature_5p = add_feature_side(base_info_df.loc[base_num, "Segment5'Feature"], 5)
+        # Here the direction refers to the direction from the feature to the base.
+        # The base of interest is in the 3' direction from the 5' feature,
+        # so the direction is 3.
+        feature_5p = format_feature_name(base_info_df.loc[base_num, "Segment5'Feature"], "3")
         if feature_5p in features:
             coeff_5p = funcs[feature_5p](dist_5p.loc[base_num])
             coeffs.loc[base_num, feature_5p] = coeff_5p
-        feature_3p = add_feature_side(base_info_df.loc[base_num, "Segment3'Feature"], 3)
+        # The base of interest is in the 5' direction from the 3' feature,
+        # so the direction is 5.
+        feature_3p = format_feature_name(base_info_df.loc[base_num, "Segment3'Feature"], "5")
         if feature_3p in features:
             coeff_3p = funcs[feature_3p](dist_3p.loc[base_num])
             coeffs.loc[base_num, feature_3p] = coeff_3p

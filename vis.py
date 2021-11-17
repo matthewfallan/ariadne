@@ -8,7 +8,7 @@ from collections import defaultdict, deque
 import re
 
 import seq_utils
-import terms
+from terms import *
 
 
 def annotate_bases(vis_file, version):
@@ -43,11 +43,11 @@ def annotate_bases(vis_file, version):
             double_helices[1].append(num2)  # add to 3' side
             annot1, annot2 = None, None
             if i_line == 1:
-                annot1 = terms.EDGE_TM, 3  # at the 3' end of an edge
-                annot2 = terms.EDGE_TM, 5  # at the 5' end of an edge
+                annot1 = VERTEX, 5  # on the 5' side of a vertex / 3' end of an edge
+                annot2 = VERTEX, 3  # on the 3' side of a vertex / 5' end of an edge
             elif i_line == n_lines:
-                annot1 = terms.EDGE_TM, 5  # at the 5' end of an edge
-                annot2 = terms.EDGE_TM, 3  # at the 3' end of an edge
+                annot1 = VERTEX, 3  # on the 3' side of a vertex / 5' end of an edge
+                annot2 = VERTEX, 5  # on the 5' side of a vertex / 3' end of an edge
             else:
                 if version == 1:
                     if topo1 == "| +>":
@@ -55,61 +55,61 @@ def annotate_bases(vis_file, version):
                         if block_lines[i_line][9:13] == "| . ": 
                             # next nucleotide is staple end, not staple crossover
                             # block_lines[i_line] is the next line, because i_line = 1 for block_lines[0] 
-                            annot1 = terms.STAP_XO_1, 5  # lies just 5' of staple crossover (single; mesojeunction)
-                            annot2 = terms.STAP_XO_1, 3  # lies just 3' of staple crossover (single; mesojunction)
+                            annot1 = STAP_XO_1, 5  # lies just 5' of staple crossover (single; mesojunction)
+                            annot2 = STAP_XO_1, 3  # lies just 3' of staple crossover (single; mesojunction)
                         elif block_lines[i_line][9:13] == "| +<": # next nucleotide is an adjacent staple crossover
                             # next nucleotide is staple end, not staple crossover
                             # block_lines[i_line] is the next line, because i_line = 1 for block_lines[0]    
-                            annot1 = terms.STAP_XO_2, 5  # lies just 5' of staple crossover (double; classic junction)
-                            annot2 = terms.STAP_XO_2, 3  # lies just 3' of staple crossover (double; classic junction)
+                            annot1 = STAP_XO_2, 5  # lies just 5' of staple crossover (double; classic junction)
+                            annot2 = STAP_XO_2, 3  # lies just 3' of staple crossover (double; classic junction)
                     elif topo2 == ">+ |":
                         raise ValueError()
                     elif topo1 == "| +<":
                         assert topo2 == "<+ |"
                         if block_lines[i_line-2][9:13] == "| v ": # previous nucleotide is a staple end, not staple xover
                             # next nucleotide is staple end, not staple crossover
-                            # block_lines[i_line-2] is the previous line, because i_line = 1 for block_lines[0]                            annot1 = terms.STAP_XO_1, 3  # lies just 3' of staple crossover (single; mesojeunction)
-                            annot1 = terms.STAP_XO_1, 3  # lies just 3' of staple crossover (single; mesojunction)
-                            annot2 = terms.STAP_XO_1, 5  # lies just 5' of staple crossover (single; mesojeunction)
+                            # block_lines[i_line-2] is the previous line, because i_line = 1 for block_lines[0]
+                            annot1 = STAP_XO_1, 3  # lies just 3' of staple crossover (single; mesojunction)
+                            annot2 = STAP_XO_1, 5  # lies just 5' of staple crossover (single; mesojunction)
                         elif block_lines[i_line-2][9:13] == "| +>": # previous nucleotide is an adjacent staple crossover
                             # next nucleotide is staple end, not staple crossover
-                            # block_lines[i_line-2] is the previous line, because i_line = 1 for block_lines[0]                            annot1 = terms.STAP_XO_2, 3  # lies just 3' of staple crossover (double; classic junction)
-                            annot1 = terms.STAP_XO_2, 3  # lies just 3' of staple crossover (double; classic junction)
-                            annot2 = terms.STAP_XO_2, 5  # lies just 5' of staple crossover (double; classic junction)
+                            # block_lines[i_line-2] is the previous line, because i_line = 1 for block_lines[0]                           
+                            annot1 = STAP_XO_2, 3  # lies just 3' of staple crossover (double; classic junction)
+                            annot2 = STAP_XO_2, 5  # lies just 5' of staple crossover (double; classic junction)
                     elif topo2 == "<+ |":
                         raise ValueError()
                 elif version == 2:
                     if topo1 == ">>|>":
-                        annot1 = terms.SCAF_XO, 5  # lies just 5' of scaffold crossover
+                        annot1 = SCAF_XO, 5  # lies just 5' of scaffold crossover
                     if topo2 == ">|>>":
-                        annot2 = terms.SCAF_XO, 3  # lies just 3' of scaffold crossover
+                        annot2 = SCAF_XO, 3  # lies just 3' of scaffold crossover
                     if topo1 == "<<|<":
-                        annot1 = terms.SCAF_XO, 3  # lies just 3' of scaffold crossover
+                        annot1 = SCAF_XO, 3  # lies just 3' of scaffold crossover
                     if topo2 == "<|<<":
-                        annot2 = terms.SCAF_XO, 5  # lies just 5' of scaffold crossover
+                        annot2 = SCAF_XO, 5  # lies just 5' of scaffold crossover
                 else:
                     raise ValueError(version)
                 if not (annot1 and annot2):
                     if topo1 == "| | ":
-                        annot1 = terms.MIDDLE  # normal helix
+                        annot1 = MIDDLE  # normal helix
                     elif topo1 == "| . ":
-                        annot1 = terms.STAP_TM, 5  # 5' terminus of staple (not adjacent to single xover)
+                        annot1 = STAP_TM5, 0  # 5' terminus of staple (not adjacent to single xover)
                     elif topo1 == "| v ":
-                        annot1 = terms.STAP_TM, 3 # 3' terminus of staple (not adjacent to single xover)
+                        annot1 = STAP_TM3, 0 # 3' terminus of staple (not adjacent to single xover)
                     elif topo1 == ". | ":
-                        annot1 = terms.SCAF_TM, 3  # 5' terminus of scaffold
+                        annot1 = SCAF_TM5, 0  # 5' terminus of scaffold
                     elif topo1 == "^ | ":
-                        annot1 = terms.SCAF_TM, 3  # 3' terminus of scaffold
+                        annot1 = SCAF_TM3, 0  # 3' terminus of scaffold
                     if topo2 == " | |":
-                        annot2 = terms.MIDDLE  # normal helix
+                        annot2 = MIDDLE  # normal helix
                     elif topo2 == " . |":
-                        annot2 = terms.STAP_TM, 5  # 5' terminus of staple (not adjacent to single xover)
+                        annot2 = STAP_TM5, 0  # 5' terminus of staple (not adjacent to single xover)
                     elif topo2 == " ^ |":
-                        annot2 = terms.STAP_TM, 3  # 3' terminus of staple (not adjacent to single xover)
+                        annot2 = STAP_TM3, 0  # 3' terminus of staple (not adjacent to single xover)
                     elif topo2 == " | .":
-                        annot2 = terms.SCAF_TM, 5  # 5' terminus of scaffold
+                        annot2 = SCAF_TM5, 0  # 5' terminus of scaffold
                     elif topo2 == " | v":
-                        annot2 = terms.SCAF_TM, 3  # 3' terminus of scaffold
+                        annot2 = SCAF_TM3, 0  # 3' terminus of scaffold
             assert annot1 and annot2
             base_annotations[annot1].add(num1)
             base_annotations[annot2].add(num2)

@@ -22,15 +22,21 @@ def color_annotations_groups_pdb(base_annotations, cando_num_to_pdb_chain_num, p
         (terms.STAP, terms.STAP_XO_1): "#00ff00",  # bright green
         (terms.SCAF, terms.STAP_XO_2): "#004953",  # kind of teal
         (terms.STAP, terms.STAP_XO_2): "#2f847c",  # lighter teal
-        (terms.SCAF, terms.SCAF_TM): "#884400",  # brown
-        (terms.STAP, terms.SCAF_TM): "#ff8800",  # orange
-        (terms.SCAF, terms.STAP_TM): "#ff0000",  # red
-        (terms.STAP, terms.STAP_TM): "#ff8888",  # pink
-        (terms.SCAF, terms.STAP_TM_XO): "#674ea7",  # purpley
-        (terms.STAP, terms.STAP_TM_XO): "#ab90cb",  # light purpley
-        (terms.SCAF, terms.EDGE_TM): "#0000ff",  # blue
-        (terms.STAP, terms.EDGE_TM): "#8888ff",  # light blue
-        (terms.STAP, terms.VERTEX): "#ffff00",  # yellow
+        (terms.SCAF, terms.SCAF_TM5): "#884400",  # brown
+        (terms.STAP, terms.SCAF_TM5): "#ff8800",  # orange
+        (terms.SCAF, terms.STAP_TM5): "#ff0000",  # red
+        (terms.STAP, terms.STAP_TM5): "#ff8888",  # pink
+        (terms.SCAF, terms.STAP_TM5_XO): "#674ea7",  # purpley
+        (terms.STAP, terms.STAP_TM5_XO): "#ab90cb",  # light purpley
+        (terms.SCAF, terms.SCAF_TM3): "#884400",  # brown
+        (terms.STAP, terms.SCAF_TM3): "#ff8800",  # orange
+        (terms.SCAF, terms.STAP_TM3): "#ff0000",  # red
+        (terms.STAP, terms.STAP_TM3): "#ff8888",  # pink
+        (terms.SCAF, terms.STAP_TM3_XO): "#674ea7",  # purpley
+        (terms.STAP, terms.STAP_TM3_XO): "#ab90cb",  # light purpley
+        (terms.SCAF, terms.VERTEX): "#0000ff",  # blue
+        (terms.STAP, terms.VERTEX): "#8888ff",  # light blue
+        (terms.STAP, terms.IN_VERTEX): "#ffff00",  # yellow
     }
     cmds = [f"open {pdb_file}", f"color {default_color}"]  # default color
     for (strand, feature, direction), base_nums_cando in base_annotations.items():
