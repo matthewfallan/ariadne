@@ -259,6 +259,25 @@ BOND_TYPE_VARS = [f"{a1}-{a2} {dist}" for (n1, a1), (n2, a2) in pdb_tools.BACKBO
 TM_SALTCORR = 6
 
 
+def get_segments(base_info_df, g_up, g_dn):
+    base_num = 0
+    base_num_max = base_info_df.index.max()
+    segments = list()
+    while base_num < base_num_max:
+        segment = walk_segment(base_info_df, g_up, g_dn, base_num + 1)
+        seg5 = segment[0]
+        seg3 = segment[-1]
+        segments.append({
+            "Seg5": seg5,
+            "Seg3": seg3,
+            "Feature5": base_info_df.loc[seg5, "Feature"],
+            "Feature3": base_info_df.loc[seg3, "Feature"],
+        })
+        base_num = seg3
+    segments = pd.DataFrame(segments)
+    return segments
+
+
 def get_melt(seq):
     return mt.Tm_NN(seq, nn_table=mt.R_DNA_NN1, saltcorr=6)
 
@@ -417,7 +436,7 @@ def format_feature_name(feature, direction):
         raise ValueError(direction)
 
 
-features_order = [SCAF_XO, STAP_XO_1, STAP_XO_2, VERTEX, STAP_TM5, STAP_TM3, STAP_TM5_XO, STAP_TM3_XO]
+features_order = [SCAF_XO, STAP_XO_2, STAP_XO_1, VERTEX, STAP_TM5, STAP_TM3, STAP_TM5_XO, STAP_TM3_XO]
 
 def get_formatted_features(base_info_df):
     base_info_features = set(base_info_df["Feature"])

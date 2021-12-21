@@ -134,8 +134,10 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
     SCAF_XO = f"{terms.SCAF}_{terms.SCAF_XO}"
     STAP_XO_1 = f"{terms.SCAF}_{terms.STAP_XO_1}"
     STAP_XO_2 = f"{terms.SCAF}_{terms.STAP_XO_2}"
-    SCAF_TM = f"{terms.SCAF}_{terms.SCAF_TM}"
-    STAP_TM = f"{terms.SCAF}_{terms.STAP_TM}"
+    SCAF_TM5 = f"{terms.SCAF}_{terms.SCAF_TM5}"
+    SCAF_TM3 = f"{terms.SCAF}_{terms.SCAF_TM3}"
+    STAP_TM5 = f"{terms.SCAF}_{terms.STAP_TM5}"
+    STAP_TM3 = f"{terms.SCAF}_{terms.STAP_TM3}"
     zorder = {"feature": 1, "Base": 2, "text": 3}
     seqs = dict(zip(base_info["CanDo number"], base_info["Base"]))
     locs = dict(zip(base_info["CanDo number"], base_info["Feature"]))
@@ -179,24 +181,24 @@ def secondary_structure_signal(fname, edges, g_up, g_dn, g_ax, base_info, signal
                         x_xo = xs.get(g_ax[g_dn[g_ax[num]]])
                         y_xo = ys.get(g_ax[g_dn[g_ax[num]]])
                     else:
-                        raise ValueError()
+                        raise ValueError(loc)
                     if x_xo is not None:
                         plt.plot([x, x_xo], [y, y_xo], c=STAP_XO_COLOR, zorder=zorder["feature"])
-                elif loc.startswith(SCAF_TM):
-                    # staple crossovers
-                    if loc.endswith("5"):
+                elif loc.startswith(SCAF_TM5) or loc.startswith(SCAF_TM3):
+                    # scaffold crossovers
+                    if loc.startswith(SCAF_TM5):
                         x_tm = x + X_INC / 2 * [-1, 1][helix_i]
-                    elif loc.endswith("3"):
+                    elif loc.startswith(SCAF_TM3):
                         x_tm = x + X_INC / 2 * [1, -1][helix_i]
                     else:
                         raise ValueError()
                     if x_tm is not None:
                         plt.plot([x_tm, x_tm], [y, y + TM_HEIGHT * [1, -1][helix_i]], c=SCAF_XO_COLOR, zorder=zorder["feature"])
-                elif loc.startswith(STAP_TM):
+                elif loc.startswith(STAP_TM5) or loc.startswith(STAP_TM3):
                     # staple crossovers
-                    if loc.endswith("5"):
+                    if loc.startswith(STAP_TM5):
                         x_tm = x + X_INC / 2 * [1, -1][helix_i]
-                    elif loc.endswith("3"):
+                    elif loc.startswith(STAP_TM3):
                         x_tm = x + X_INC / 2 * [-1, 1][helix_i]
                     else:
                         raise ValueError()
